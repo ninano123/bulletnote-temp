@@ -1,18 +1,28 @@
 /*
  * 템플릿 페이지 엔진
  * - Bujo.mount(opts)로 페이지(헤더·안내·툴바·디자인 갤러리)를 그린다.
- * - 비율 전환, PDF(브라우저 인쇄), JPG(html-to-image) 내보내기를 처리한다.
+ * - 비율 전환, 가로 디자인, 날짜 지정(연 · 월 · 주), 주 시작 요일을 처리한다.
+ * - PDF(브라우저 인쇄), JPG(html-to-image) 내보내기를 처리한다.
  * - Bujo.h 에 시트 마크업 헬퍼가 있다.
  * file:// 에서도 열리도록 모듈이 아닌 일반 스크립트로 작성한다.
+ *
+ * mount(opts)
+ *   section, id, name, en, summary, parts[], usage[], tips[]
+ *   date: "month" | "year" | "week"   (생략하면 날짜 컨트롤 없음)
+ *   weekStart: true                   (주 시작 요일 토글 표시)
+ *   variants: [{ key, name, desc, html, no?, land? }]
+ *     html  — 문자열 또는 ctx => 문자열
+ *     land  — true면 가로 방향(비율의 가로 · 세로를 바꿔 씀)
+ *   ctx = { dated, year, month(1~12), date(Date), weekStart(0 일 | 1 월) }
  */
 (function () {
   "use strict";
 
   const RATIOS = [
-    { id: "iso",    name: "ISO A",   sub: "A4·A5",      ar: "1 / 1.4142", mm: [210, 297],     px: [1654, 2339] },
-    { id: "3x4",    name: "3 : 4",   sub: "iPad 기본형", ar: "3 / 4",      mm: [180, 240],     px: [1536, 2048] },
-    { id: "10x16",  name: "10 : 16", sub: "Galaxy Tab", ar: "10 / 16",    mm: [160, 256],     px: [1600, 2560] },
-    { id: "letter", name: "Letter",  sub: "US Letter",  ar: "8.5 / 11",   mm: [215.9, 279.4], px: [1700, 2200] }
+    { id: "iso",    name: "ISO A",   sub: "A4·A5",      w: 1,   h: 1.4142, mm: [210, 297],     px: [1654, 2339] },
+    { id: "3x4",    name: "3 : 4",   sub: "iPad 기본형", w: 3,   h: 4,      mm: [180, 240],     px: [1536, 2048] },
+    { id: "10x16",  name: "10 : 16", sub: "Galaxy Tab", w: 10,  h: 16,     mm: [160, 256],     px: [1600, 2560] },
+    { id: "letter", name: "Letter",  sub: "US Letter",  w: 8.5, h: 11,     mm: [215.9, 279.4], px: [1700, 2200] }
   ];
 
   const SECTIONS = {
@@ -24,6 +34,12 @@
         { id: "daily-reflection", href: "reflection.html", name: "데일리 회고" },
         { id: "daily-all-in-one", href: "all-in-one.html", name: "올인원 데일리" },
         { id: "daily-half",       href: "half.html",       name: "하프 데일리" }
+      ]
+    },
+    period: {
+      label: "B · PERIODIC LOGS",
+      pages: [
+        { id: "monthly-calendar", href: "monthly-calendar.html", name: "먼슬리 캘린더" }
       ]
     }
   };
@@ -40,13 +56,48 @@
 
   /* ───────────── 마크업 헬퍼 ───────────── */
   const WEEK = ["S", "M", "T", "W", "T", "F", "S"];
+  const WEEK_KO = ["일", "월", "화", "수", "목", "금", "토"];
+  const MONTH_EN = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+  const MONTH_SHORT = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const rep = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join("");
-  // 토요일은 항상 .sat 클래스를 달고, 시트에 .sat-blue 가 있을 때만 파란색으로 보인다
-  const week = () => WEEK.map((d, i) => `<span${i === 0 ? ' class="sun"' : i === 6 ? ' class="sat"' : ""}>${d}</span>`).join("");
+  const pad = n => String(n).padStart(2, "0");
+  // 요일 번호(0 일 ~ 6 토)에 맞는 클래스. 토요일 파란색은 시트에 .sat-blue 가 있을 때만 보인다
+  const dowCls = d => (d === 0 ? "sun" : d === 6 ? "sat" : "");
+  const week = () => WEEK.map((d, i) => `<span${dowCls(i) ? ` class="${dowCls(i)}"` : ""}>${d}</span>`).join("");
+
+  /** ws(주 시작) 기준으로 n번째 칸의 요일 번호 */
+  const dowAt = (i, ws = 0) => (i + ws) % 7;
+
+  /** 한 달을 7칸 단위 배열로: [{ d: 날짜 | null, dow }]. 날짜 없음이면 빈 칸 6주 */
+  function monthCells(ctx, year, month) {
+    const ws = ctx.weekStart;
+    if (!ctx.dated) return Array.from({ length: 42 }, (_, i) => ({ d: null, dow: dowAt(i % 7, ws) }));
+    const offset = (new Date(year, month - 1, 1).getDay() - ws + 7) % 7;
+    const days = new Date(year, month, 0).getDate();
+    const weeks = Math.ceil((offset + days) / 7);
+    return Array.from({ length: weeks * 7 }, (_, i) => {
+      const n = i - offset + 1;
+      return { d: n >= 1 && n <= days ? n : null, dow: dowAt(i % 7, ws) };
+    });
+  }
+
+  /** 주 시작 기준 요일 머리글 */
+  const weekHead = (ws = 0, ko = false) =>
+    rep(7, i => { const d = dowAt(i, ws); return `<span class="${dowCls(d)}">${(ko ? WEEK_KO : WEEK)[d]}</span>`; });
+
+  /** ctx.date 가 속한 주의 7일 (Date 배열) */
+  function weekDates(ctx) {
+    const base = new Date(ctx.date.getFullYear(), ctx.date.getMonth(), ctx.date.getDate());
+    base.setDate(base.getDate() - ((base.getDay() - ctx.weekStart + 7) % 7));
+    return Array.from({ length: 7 }, (_, i) => { const d = new Date(base); d.setDate(base.getDate() + i); return d; });
+  }
+
+  /** 시작 연 · 월에서 k개월 뒤 */
+  const addMonths = (year, month, k) => { const t = year * 12 + (month - 1) + k; return { year: Math.floor(t / 12), month: (t % 12) + 1 }; };
 
   const h = {
-    rep,
-    week,
+    rep, pad, week, weekHead, monthCells, weekDates, addMonths, dowAt, dowCls,
+    WEEK, WEEK_KO, MONTH_EN, MONTH_SHORT,
     /** 빈 줄 n개 */
     lines: (n, cls = "") => `<div class="lines ${cls}">${rep(n, () => "<i></i>")}</div>`,
     /** 번호 붙은 줄 */
@@ -72,7 +123,7 @@
      */
     timeGrid: ({ from = 4, to = 24, sub = 6, head = true, rows: list } = {}) => {
       const step = 60 / sub;
-      const labels = rep(sub, k => `<span>${String(((k + 1) * step) % 60).padStart(2, "0")}</span>`);
+      const labels = rep(sub, k => `<span>${pad(((k + 1) * step) % 60)}</span>`);
       list = list || Array.from({ length: to - from + 1 }, (_, k) => ({ label: from + k }));
       const rows = list.map(r =>
         `<div class="tg-row${r.cls ? " " + r.cls : ""}"><b>${r.label}</b>${rep(sub, j => `<i${j === sub / 2 - 1 ? ' class="mid"' : ""}></i>`)}</div>`).join("");
@@ -95,7 +146,31 @@
     /** 불릿 기호 범례 한 줄 */
     keyLine: () => `<div class="keyline">${[
       ["•", "할 일"], ["×", "완료"], ["&gt;", "이월"], ["&lt;", "일정 이동"], ["○", "이벤트"], ["–", "메모"], ["*", "중요"], ["!", "영감"]
-    ].map(([s, t]) => `<span><b>${s}</b>${t}</span>`).join("")}</div>`
+    ].map(([s, t]) => `<span><b>${s}</b>${t}</span>`).join("")}</div>`,
+
+    /**
+     * 월 제목. 날짜 지정이면 "10 OCTOBER 2026", 아니면 손으로 적을 빈칸
+     * size: "lg" | "sm"
+     */
+    monthTitle: (ctx, year, month, size = "lg") => ctx.dated
+      ? `<div class="mtitle ${size}"><b>${pad(month)}</b><span>${MONTH_EN[month - 1]}</span><em>${year}</em></div>`
+      : `<div class="mtitle ${size} blank-t"><b><i></i></b><span>MONTH</span><em><i></i></em></div>`,
+
+    /** 미니 달력 (작은 7칸 그리드) */
+    miniCal: (ctx, year, month) => {
+      const cells = monthCells(ctx, year, month);
+      return `<div class="mc"><div class="mc-h">${weekHead(ctx.weekStart)}</div>` +
+        `<div class="mc-b${ctx.dated ? "" : " undated"}">${cells.map(c =>
+          `<span class="${dowCls(c.dow)}">${c.d || ""}</span>`).join("")}</div></div>`;
+    },
+
+    /** 큰 달력 그리드. ko=true면 요일을 한글로 */
+    calGrid: (ctx, year, month, ko = false) => {
+      const cells = monthCells(ctx, year, month);
+      return `<div class="cal"><div class="cal-h">${weekHead(ctx.weekStart, ko)}</div>` +
+        `<div class="cal-b${ctx.dated ? "" : " undated"}">${cells.map(c =>
+          `<span class="${dowCls(c.dow)}${ctx.dated && !c.d ? " out" : ""}">${c.d || ""}</span>`).join("")}</div></div>`;
+    }
   };
 
   /* ───────────── 상태 ───────────── */
@@ -106,9 +181,35 @@
   let ratio = RATIOS.find(r => r.id === (params.get("ratio") || store.get("ratio"))) || RATIOS[0];
   let page = null;
 
+  const today = new Date();
+  const ctx = {
+    dated: (params.get("dated") || store.get("dated", "0")) === "1",
+    year: +(params.get("year") || today.getFullYear()),
+    month: +(params.get("month") || today.getMonth() + 1),
+    date: params.get("date") ? new Date(params.get("date") + "T00:00") : today,
+    weekStart: +(params.get("ws") || store.get("ws", "0"))
+  };
+
   const el = html => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; };
   const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  const fileName = v => `${page.id}_${v.no}-${v.key}_${ratio.id}`;
+  const render = v => (typeof v.html === "function" ? v.html(ctx) : v.html);
+  const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  /** 디자인 방향을 반영한 크기 */
+  function dims(v) {
+    const r = ratio;
+    return v.land
+      ? { ar: `${r.h} / ${r.w}`, mm: [r.mm[1], r.mm[0]], px: [r.px[1], r.px[0]] }
+      : { ar: `${r.w} / ${r.h}`, mm: r.mm, px: r.px };
+  }
+
+  function dateSuffix() {
+    if (!page.date || !ctx.dated) return "";
+    if (page.date === "year") return `_${ctx.year}`;
+    if (page.date === "month") return `_${ctx.year}-${pad(ctx.month)}`;
+    return `_${isoDate(weekDates(ctx)[0])}`;
+  }
+  const fileName = v => `${page.id}_${v.no}-${v.key}_${ratio.id}${v.land ? "-land" : ""}${dateSuffix()}`;
 
   // 번호: v.no 가 있으면 그대로(예: "01-A" 파생 디자인), 없으면 01, 02… 순서대로 매긴다
   function numberVariants(variants) {
@@ -145,7 +246,8 @@
         </section>
         <section>
           <h2>디자인 <small>${opts.variants.length}종</small></h2>
-          <p class="lead">비율을 고른 뒤 디자인마다 있는 PDF·JPG 버튼으로 내보냅니다. PDF는 인쇄 창에서 "PDF로 저장"을 고르세요.</p>
+          <p class="lead">비율을 고른 뒤 디자인마다 있는 PDF·JPG 버튼으로 내보냅니다. PDF는 인쇄 창에서 "PDF로 저장"을 고르세요.${
+            opts.date ? " 날짜를 지정하면 달력 숫자가 채워진 상태로 만들어집니다." : ""}</p>
           <div class="toolbar" id="toolbar"></div>
           <div class="gallery" id="gallery"></div>
         </section>
@@ -161,6 +263,20 @@
     if (target) target.scrollIntoView();
   }
 
+  function dateControls() {
+    if (!page.date) return "";
+    const y0 = today.getFullYear();
+    const years = rep(9, k => { const y = y0 - 2 + k; return `<option value="${y}"${y === ctx.year ? " selected" : ""}>${y}년</option>`; });
+    const months = rep(12, k => `<option value="${k + 1}"${k + 1 === ctx.month ? " selected" : ""}>${k + 1}월</option>`);
+    const pick = page.date === "week"
+      ? `<input type="date" class="ctl" data-ctl="date" value="${isoDate(ctx.date)}" aria-label="주에 포함된 날짜">`
+      : `<select class="ctl" data-ctl="year" aria-label="연도">${years}</select>` +
+        (page.date === "month" ? `<select class="ctl" data-ctl="month" aria-label="월">${months}</select>` : "");
+    return `<div class="tb-group"><span class="tb-label">날짜</span>
+        <div class="seg" data-seg="dated"><button type="button" data-v="0">없음</button><button type="button" data-v="1">지정</button></div>
+        ${pick}</div>`;
+  }
+
   function renderToolbar() {
     const tb = document.getElementById("toolbar");
     const size = params.get("size") || store.get("size", "m");
@@ -168,54 +284,78 @@
       <div class="tb-group"><span class="tb-label">비율</span>
         <div class="seg" data-seg="ratio">${RATIOS.map(r =>
           `<button type="button" data-v="${r.id}" title="${r.sub}">${r.name}</button>`).join("")}</div></div>
+      ${dateControls()}
+      ${page.weekStart ? `<div class="tb-group"><span class="tb-label">주 시작</span>
+        <div class="seg" data-seg="ws"><button type="button" data-v="0">일</button><button type="button" data-v="1">월</button></div></div>` : ""}
       <div class="tb-group"><span class="tb-label">미리보기</span>
         <div class="seg" data-seg="size"><button type="button" data-v="m">보통</button><button type="button" data-v="l">크게</button></div></div>
       <span class="tb-spacer"></span>
       <button type="button" class="btn primary" data-act="pdf-all">전체 디자인 PDF</button>
       <div class="tb-info" id="tb-info"></div>`;
 
-    tb.querySelector('[data-seg="ratio"]').addEventListener("click", e => {
-      const b = e.target.closest("button"); if (!b) return;
-      ratio = RATIOS.find(r => r.id === b.dataset.v);
-      store.set("ratio", ratio.id);
-      applyRatio();
-    });
-    tb.querySelector('[data-seg="size"]').addEventListener("click", e => {
-      const b = e.target.closest("button"); if (!b) return;
-      store.set("size", b.dataset.v);
-      applySize(b.dataset.v);
-    });
+    const onSeg = (seg, fn) => {
+      const g = tb.querySelector(`[data-seg="${seg}"]`);
+      if (g) g.addEventListener("click", e => { const b = e.target.closest("button"); if (b) fn(b.dataset.v); });
+    };
+    onSeg("ratio", v => { ratio = RATIOS.find(r => r.id === v); store.set("ratio", v); applyRatio(); });
+    onSeg("size", v => { store.set("size", v); applySize(v); });
+    onSeg("dated", v => { ctx.dated = v === "1"; store.set("dated", v); refresh(); });
+    onSeg("ws", v => { ctx.weekStart = +v; store.set("ws", v); refresh(); });
+    tb.querySelectorAll("[data-ctl]").forEach(c => c.addEventListener("change", () => {
+      const k = c.dataset.ctl;
+      if (k === "date") { if (c.value) ctx.date = new Date(c.value + "T00:00"); }
+      else ctx[k] = +c.value;
+      refresh();
+    }));
     tb.querySelector('[data-act="pdf-all"]').addEventListener("click", () =>
-      printSheets(page.variants.map((v, i) => ({ v, i })), `${page.id}_all_${ratio.id}`));
+      printSheets(page.variants, `${page.id}_all_${ratio.id}${dateSuffix()}`));
     applySize(size);
+    syncControls();
+  }
+
+  function syncControls() {
+    pressed("dated", ctx.dated ? "1" : "0");
+    pressed("ws", String(ctx.weekStart));
+    document.querySelectorAll("#toolbar [data-ctl]").forEach(c => (c.disabled = !ctx.dated));
   }
 
   function renderGallery() {
     const g = document.getElementById("gallery");
-    page.variants.forEach((v, i) => {
+    page.variants.forEach(v => {
       const card = el(`
-        <article class="variant" id="v-${v.key}">
+        <article class="variant${v.land ? " land" : ""}" id="v-${v.key}">
           <div class="v-head"><span class="v-no">${v.no}</span>
-            <div><h3>${v.name}</h3><p>${v.desc}</p></div></div>
-          <div class="sheet-frame"><div class="sheet">${v.html}</div></div>
+            <div><h3>${v.name}${v.land ? ' <span class="v-tag">가로</span>' : ""}</h3><p>${v.desc}</p></div></div>
+          <div class="sheet-frame"><div class="sheet">${render(v)}</div></div>
           <div class="v-actions">
             <button type="button" class="btn" data-act="pdf">PDF</button>
             <button type="button" class="btn" data-act="jpg">JPG</button>
           </div>
         </article>`);
-      card.querySelector('[data-act="pdf"]').addEventListener("click", () => printSheets([{ v, i }], fileName(v)));
-      card.querySelector('[data-act="jpg"]').addEventListener("click", e => exportJpg(v, i, e.currentTarget));
+      card.querySelector('[data-act="pdf"]').addEventListener("click", () => printSheets([v], fileName(v)));
+      card.querySelector('[data-act="jpg"]').addEventListener("click", e => exportJpg(v, e.currentTarget));
+      v.card = card;
       g.append(card);
     });
   }
 
+  /** 날짜 · 주 시작이 바뀌면 시트 내용을 다시 그린다 */
+  function refresh() {
+    syncControls();
+    page.variants.forEach(v => { v.card.querySelector(".sheet").innerHTML = render(v); });
+    applyRatio();
+  }
+
   function applyRatio() {
-    const g = document.getElementById("gallery");
-    g.style.setProperty("--ar", ratio.ar);
-    g.querySelectorAll(".sheet").forEach(s => (s.dataset.ratio = ratio.id));
+    page.variants.forEach(v => {
+      const s = v.card.querySelector(".sheet");
+      s.style.setProperty("--ar", dims(v).ar);
+      s.dataset.ratio = ratio.id;
+    });
     pressed("ratio", ratio.id);
-    document.getElementById("tb-info").textContent =
-      `${ratio.name} (${ratio.sub}) · PDF ${ratio.mm[0]} × ${ratio.mm[1]} mm · JPG ${ratio.px[0]} × ${ratio.px[1]} px`;
+    let info = `${ratio.name} (${ratio.sub}) · PDF ${ratio.mm[0]} × ${ratio.mm[1]} mm · JPG ${ratio.px[0]} × ${ratio.px[1]} px`;
+    if (page.variants.some(v => v.land)) info += " · 가로 디자인은 가로 · 세로를 바꿔 씁니다";
+    document.getElementById("tb-info").textContent = info;
   }
 
   function applySize(v) {
@@ -228,14 +368,19 @@
   }
 
   /* ───────────── PDF (인쇄) ───────────── */
-  function printSheets(items, name) {
+  // 세로는 기본 @page, 가로 디자인은 이름 붙은 @page land 를 써서 한 PDF 안에 방향을 섞을 수 있다
+  function printSheets(variants, name) {
     const root = document.createElement("div");
     root.id = "print-root";
-    root.innerHTML = items.map(({ v }) =>
-      `<div class="print-page"><div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}">${v.html}</div></div></div>`).join("");
+    root.innerHTML = variants.map(v => {
+      const { mm } = dims(v);
+      return `<div class="print-page${v.land ? " land" : ""}" style="width:${mm[0]}mm;height:${mm[1]}mm">` +
+        `<div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}">${render(v)}</div></div></div>`;
+    }).join("");
 
+    const [w, hgt] = ratio.mm;
     const style = document.createElement("style");
-    style.textContent = `@page { size: ${ratio.mm[0]}mm ${ratio.mm[1]}mm; margin: 0; }`;
+    style.textContent = `@page { size: ${w}mm ${hgt}mm; margin: 0; } @page land { size: ${hgt}mm ${w}mm; margin: 0; }`;
 
     const title = document.title;
     document.head.append(style);
@@ -253,16 +398,16 @@
   }
 
   /* ───────────── JPG ───────────── */
-  async function exportJpg(v, i, btn) {
+  async function exportJpg(v, btn) {
     if (!window.htmlToImage) { alert("이미지 변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요."); return; }
-    const [W, H] = ratio.px;
+    const [W, H] = dims(v).px;
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = "저장 중…";
 
     // 목표 픽셀 크기 그대로 화면 밖에 그린 뒤 캡처한다 (cqw 단위가 그대로 확대된다)
     const host = document.createElement("div");
     host.style.cssText = `position:fixed;left:${-W - 200}px;top:0;width:${W}px;pointer-events:none;`;
-    host.innerHTML = `<div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}" style="aspect-ratio:auto;height:${H}px;box-shadow:none">${v.html}</div></div>`;
+    host.innerHTML = `<div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}" style="aspect-ratio:auto;height:${H}px;box-shadow:none">${render(v)}</div></div>`;
     document.body.append(host);
 
     try {

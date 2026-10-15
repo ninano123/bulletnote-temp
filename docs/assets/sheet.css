@@ -48,6 +48,12 @@ nav.toc.sub { position: static; }
 .v-head h3 { margin: 0; font-size: 16px; }
 .v-head p { margin: 2px 0 0; font-size: 13px; color: var(--ink-soft); }
 .v-actions { display: flex; gap: 8px; }
+.variant.land { grid-column: 1 / -1; }
+.gallery:not(.large) .variant.land .sheet-frame { max-width: 760px; }
+.v-tag { font-size: 11px; font-weight: 600; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; margin-left: 4px; vertical-align: 2px; }
+
+.ctl { font: inherit; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--ink); }
+.ctl:disabled { opacity: .45; }
 
 #print-root { display: none; }
 
@@ -181,6 +187,36 @@ nav.toc.sub { position: static; }
 .keyline { display: flex; flex-wrap: wrap; gap: .8cqw 2.6cqw; font-size: 1.2cqw; color: var(--s-soft); padding-top: 1.4cqw; border-top: var(--hair) solid var(--s-line); }
 .keyline b { font-weight: 600; color: var(--s-ink); margin-right: .6cqw; font-size: 1.4cqw; }
 
+/* 월 제목: 10 OCTOBER 2026 (날짜 없음이면 빈칸) */
+.mtitle { display: flex; align-items: baseline; gap: 1.6cqw; white-space: nowrap; }
+.mtitle b { font-size: 6.4cqw; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.mtitle span { font-size: 1.7cqw; font-weight: 600; letter-spacing: .2em; color: var(--s-soft); }
+.mtitle em { font-size: 1.5cqw; color: var(--s-faint); letter-spacing: .08em; }
+.mtitle.sm b { font-size: 3cqw; }
+.mtitle.sm span { font-size: 1.25cqw; letter-spacing: .14em; }
+.mtitle.sm em { font-size: 1.15cqw; }
+.mtitle.blank-t i { display: inline-block; vertical-align: bottom; border-bottom: var(--hair) solid var(--s-frame); }
+.mtitle.blank-t b i { width: 9cqw; height: 6cqw; }
+.mtitle.blank-t em i { width: 8cqw; height: 1.8cqw; }
+.mtitle.sm.blank-t b i { width: 5cqw; height: 3cqw; }
+.mtitle.sm.blank-t em i { width: 5cqw; height: 1.3cqw; }
+
+/* 미니 달력 */
+.mc { display: flex; flex-direction: column; gap: .5cqw; font-size: 1.05cqw; }
+.mc-h, .mc-b { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+.mc-h span { font-weight: 600; color: var(--s-soft); }
+.mc-b span { line-height: 1.75; color: var(--s-ink); }
+.mc-b.undated span { height: 1.85cqw; background: radial-gradient(circle, var(--s-line) 0, var(--s-line) .12cqw, transparent .15cqw); }
+
+/* 큰 달력 그리드 */
+.cal { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
+.cal-h { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 1.3cqw; font-weight: 600; letter-spacing: .06em; padding-bottom: .8cqw; color: var(--s-soft); }
+.cal-h span { padding-left: 1cqw; }
+.cal-b { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; border-top: var(--stroke) solid var(--s-soft); border-left: var(--hair) solid var(--s-line); }
+.cal-b > span { border-right: var(--hair) solid var(--s-line); border-bottom: var(--hair) solid var(--s-line); padding: .6cqw .9cqw; font-size: 1.35cqw; color: var(--s-ink); min-height: 0; }
+.cal-b > span.out { background: #fafbfb; }
+.cal-b.undated > span { color: transparent; }
+
 /* 절취선 */
 .cut { flex: none; border-top: var(--hair) dashed var(--s-faint); margin: 1.5cqw -2cqw; }
 .vcut { border-left: var(--hair) dashed var(--s-faint); }
@@ -190,7 +226,10 @@ nav.toc.sub { position: static; }
   body.is-printing > :not(#print-root) { display: none !important; }
   body.is-printing { margin: 0; background: #fff; }
   #print-root { display: block; }
-  .print-page { width: 100vw; height: 100vh; overflow: hidden; break-after: page; }
+  /* 크기는 엔진이 mm 로 인라인 지정한다 */
+  .print-page { overflow: hidden; break-after: page; }
+  .print-page.land { page: land; }
   .print-page:last-child { break-after: auto; }
-  .print-page .sheet { aspect-ratio: auto; height: 100vh; box-shadow: none; }
+  .print-page .sheet-frame { height: 100%; }
+  .print-page .sheet { aspect-ratio: auto; height: 100%; box-shadow: none; }
 }
