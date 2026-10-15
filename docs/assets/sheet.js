@@ -49,7 +49,8 @@
     tracker: {
       label: "C · TRACKERS",
       pages: [
-        { id: "habit-tracker", href: "habit.html", name: "습관 트래커" }
+        { id: "habit-tracker", href: "habit.html", name: "습관 트래커" },
+        { id: "mood-tracker",  href: "mood.html",  name: "기분 트래커" }
       ]
     }
   };
@@ -144,15 +145,14 @@
     scale: (n, cls = "") => `<div class="scale ${cls}">${rep(n, i => `<span>${i + 1}</span>`)}</div>`,
     /** 물컵 n개 */
     cups: n => `<div class="scale cups">${rep(n, () => "<span></span>")}</div>`,
+    /** 기분 얼굴 하나 (k: 0 아주 좋음 ~ 4 나쁨) */
+    face: k =>
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">` +
+      `<circle cx="12" cy="12" r="10.4"/><circle cx="8.6" cy="10" r=".9" fill="currentColor" stroke="none"/>` +
+      `<circle cx="15.4" cy="10" r=".9" fill="currentColor" stroke="none"/>` +
+      `<path d="M7.6 15.2 Q12 ${[19, 17, 15, 13, 12][k]} 16.4 15.2"/></svg>`,
     /** 기분 얼굴 5단계 (좋음 → 나쁨) */
-    faces: (cls = "") => {
-      const mouth = [19, 17, 15, 13, 12];
-      return `<div class="scale faces ${cls}">${rep(5, k =>
-        `<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">` +
-        `<circle cx="12" cy="12" r="10.4"/><circle cx="8.6" cy="10" r=".9" fill="currentColor" stroke="none"/>` +
-        `<circle cx="15.4" cy="10" r=".9" fill="currentColor" stroke="none"/>` +
-        `<path d="M7.6 15.2 Q12 ${mouth[k]} 16.4 15.2"/></svg></span>`)}</div>`;
-    },
+    faces: (cls = "") => `<div class="scale faces ${cls}">${rep(5, k => `<span>${h.face(k)}</span>`)}</div>`,
     /** 불릿 기호 범례 한 줄 */
     keyLine: () => `<div class="keyline">${[
       ["•", "할 일"], ["×", "완료"], ["&gt;", "이월"], ["&lt;", "일정 이동"], ["○", "이벤트"], ["–", "메모"], ["*", "중요"], ["!", "영감"]
