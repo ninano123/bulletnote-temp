@@ -55,6 +55,12 @@
         { id: "health-tracker", href: "health.html", name: "건강 트래커" },
         { id: "expense-tracker", href: "expense.html", name: "지출 트래커" }
       ]
+    },
+    collection: {
+      label: "D · COLLECTIONS",
+      pages: [
+        { id: "goals", href: "goals.html", name: "목표 설정" }
+      ]
     }
   };
 
