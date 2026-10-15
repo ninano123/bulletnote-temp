@@ -50,7 +50,8 @@
       label: "C · TRACKERS",
       pages: [
         { id: "habit-tracker", href: "habit.html", name: "습관 트래커" },
-        { id: "mood-tracker",  href: "mood.html",  name: "기분 트래커" }
+        { id: "mood-tracker",  href: "mood.html",  name: "기분 트래커" },
+        { id: "sleep-tracker", href: "sleep.html", name: "수면 트래커" }
       ]
     }
   };
@@ -195,7 +196,7 @@
      */
     table: ({ cols, rows, head = true, cell, rowCls, cls = "" }) => {
       const tmpl = cols.map(c => c.w || "1fr").join(" ");
-      const th = head ? cols.map(c => `<span class="th${c.l ? " l" : ""}">${c.t || ""}</span>`).join("") : "";
+      const th = head ? cols.map(c => `<span class="th${c.l ? " l" : ""}">${c.t ?? ""}</span>`).join("") : "";
       const body = rep(rows, r => {
         const rc = rowCls ? rowCls(r) || "" : "";
         return cols.map((c, ci) => {
