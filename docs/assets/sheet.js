@@ -61,7 +61,8 @@
       pages: [
         { id: "goals", href: "goals.html", name: "목표 설정" },
         { id: "project-planner", href: "project.html", name: "프로젝트 플래너" },
-        { id: "brain-dump", href: "brain-dump.html", name: "브레인 덤프" }
+        { id: "brain-dump", href: "brain-dump.html", name: "브레인 덤프" },
+        { id: "reading-log", href: "reading.html", name: "독서 기록" }
       ]
     }
   };

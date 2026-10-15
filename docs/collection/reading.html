@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>독서 기록 · 하루 불릿저널</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/common.css">
+<link rel="stylesheet" href="../assets/sheet.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="../assets/sheet.js"></script>
+<style>
+  .stars { display: flex; gap: .3cqw; color: var(--s-frame); }
+  .stars svg { width: 1.5cqw; height: 1.5cqw; display: block; }
+  .stars.lg svg { width: 2.4cqw; height: 2.4cqw; }
+
+  /* 책 한 권 */
+  .book-top { display: grid; grid-template-columns: 22cqw 1fr; gap: 3cqw; }
+  .cover { aspect-ratio: 2 / 3; border: var(--hair) solid var(--s-frame); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 1cqw; font-size: 1cqw; letter-spacing: .14em; color: var(--s-faint); }
+  .field { display: flex; align-items: flex-end; gap: 1.4cqw; height: 4cqw; border-bottom: var(--hair) solid var(--s-line); }
+  .field b { flex: none; width: 9cqw; font-size: 1.15cqw; font-weight: 600; letter-spacing: .06em; color: var(--s-soft); padding-bottom: .7cqw; }
+  .field > span { padding-bottom: .5cqw; }
+  .book-top .field { flex: 1 1 0; height: auto; }
+
+  /* 책장 */
+  .shelf { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-end; gap: .5cqw; padding: 0 1cqw; border-bottom: var(--stroke) solid var(--s-soft); }
+  .shelf u { flex: 1; border: var(--hair) solid var(--s-frame); border-bottom: 0; }
+  .shelves { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 2.4cqw; }
+  .genre { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2cqw 3cqw; }
+  .genre > span { display: flex; align-items: flex-end; gap: 1cqw; }
+  .genre u { flex: none; width: 2.2cqw; height: 2.2cqw; border: var(--hair) solid var(--s-frame); }
+  .genre i { flex: 1; height: 2cqw; border-bottom: var(--hair) solid var(--s-frame); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const { h } = Bujo;
+const star = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>';
+const stars = (cls = "") => `<span class="stars ${cls}">${h.rep(5, () => star)}</span>`;
+const yearLine = `<div class="dateline"><b>YEAR</b><i></i><b style="margin-left:2.4cqw">GOAL</b><i style="width:5cqw"></i><em>권</em></div>`;
+
+const list = `
+<div class="pg">
+  <div class="head"><div class="bar">READING LOG</div>${yearLine}</div>
+  ${h.table({
+    cols: [{ t: "#", w: "3.6cqw" }, { t: "제목", l: true }, { t: "저자", w: "14cqw" }, { t: "다 읽은 날", w: "10cqw" }, { t: "별점", w: "10.4cqw" }],
+    rows: 26,
+    cell: (r, c) => (c === 0 ? r + 1 : c === 4 ? stars() : "")
+  })}
+</div>`;
+
+const field = (t, body = "") => `<div class="field"><b>${t}</b><span>${body}</span></div>`;
+const single = `
+<div class="pg">
+  <div class="head"><div class="bar">BOOK NOTE</div><div class="dateline"><b>NO.</b><i style="width:5cqw"></i></div></div>
+  <div class="book-top">
+    <div class="cover">COVER</div>
+    <div class="fx">
+      ${field("TITLE")}${field("AUTHOR")}${field("GENRE")}${field("PERIOD", '<span class="unit">~</span>')}${field("RATING", stars("lg"))}
+    </div>
+  </div>
+  <div class="fx" style="flex:4"><div class="ttl">QUOTES <small>마음에 남은 문장 · 쪽수</small></div><div class="box" style="flex:1">${h.lines(6)}</div></div>
+  <div class="fx" style="flex:5"><div class="ttl">THOUGHTS <small>생각 · 느낀 점</small></div><div class="box" style="flex:1">${h.lines(7)}</div></div>
+  <div class="fx"><div class="ttl">ACTION <small>삶에 적용할 한 가지</small></div><div class="box" style="height:6cqw">${h.checks(1)}</div></div>
+</div>`;
+
+/** 책장: 칸마다 높이가 조금씩 다른 책등 */
+const HEIGHTS = [92, 80, 96, 74, 88, 100, 82, 70, 94, 86, 78, 98, 84, 90];
+const shelves = `
+<div class="pg">
+  <div class="head"><div class="bar">BOOKSHELF</div>${yearLine}</div>
+  <div class="ttl" style="margin:0"><small>한 권 읽을 때마다 책등 하나에 장르 색을 칠하고 제목을 세로로 적습니다.</small></div>
+  <div class="shelves">${h.rep(5, s => `<div class="shelf">${Array.from({ length: 18 }, (_, k) =>
+    `<u style="height:${HEIGHTS[(k + s * 3) % HEIGHTS.length]}%"></u>`).join("")}</div>`)}</div>
+  <div class="fx"><div class="ttl">GENRE <small>장르별 색</small></div><div class="genre">${h.rep(6, () => "<span><u></u><i></i></span>")}</div></div>
+</div>`;
+
+Bujo.mount({
+  section: "collection",
+  id: "reading-log",
+  name: "독서 기록",
+  en: "Reading Log",
+  summary: "읽은 책을 모아 두는 페이지입니다. 한 해 목록을 표로 쌓거나, 한 권을 깊게 기록하거나, 책장 그림에 색을 칠해 쌓여 가는 모습을 봅니다.",
+  parts: [
+    "연도 · 올해 목표 권수",
+    "독서 목록 표 (제목 · 저자 · 다 읽은 날 · 별점)",
+    "책 한 권 노트 (표지 · 정보 · 문장 · 생각 · 적용)",
+    "책장 그림 (책 90권)과 장르 색 범례"
+  ],
+  usage: [
+    "연초에 올해 읽을 목표 권수를 적습니다.",
+    "책을 다 읽으면 목록에 한 줄을 추가하고 별점을 칠합니다.",
+    "오래 남기고 싶은 책은 책 한 권 노트에 문장과 생각을 정리합니다.",
+    "책장형은 다 읽을 때마다 책등 하나를 장르 색으로 칠합니다."
+  ],
+  tips: [
+    "마음에 남은 문장은 쪽수와 함께 적어 두면 다시 찾기 쉽습니다.",
+    "표지 칸에는 표지를 따라 그리거나 사진을 붙여 넣으세요.",
+    "다 못 읽고 그만둔 책도 목록에 남겨 두면 취향이 보입니다."
+  ],
+  variants: [
+    { key: "list",    name: "독서 목록",   desc: "26줄 표에 제목 · 저자 · 다 읽은 날 · 별점.", html: list },
+    { key: "single",  name: "책 한 권 노트", desc: "표지, 책 정보, 마음에 남은 문장, 생각, 적용할 점.", html: single },
+    { key: "shelves", name: "책장",       desc: "책등 90개를 장르 색으로 칠해 가는 그림 기록.", html: shelves }
+  ]
+});
+</script>
+</body>
+</html>
