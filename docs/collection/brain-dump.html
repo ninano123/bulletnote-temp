@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>브레인 덤프 · 하루 불릿저널</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/common.css">
+<link rel="stylesheet" href="../assets/sheet.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="../assets/sheet.js"></script>
+<style>
+  /* 아이젠하워 매트릭스 */
+  .matrix { display: grid; grid-template-columns: 3cqw 1fr 1fr; grid-template-rows: auto 1fr 1fr; gap: 0 1.6cqw; }
+  .matrix .ax { font-size: 1.05cqw; font-weight: 600; letter-spacing: .1em; color: var(--s-faint); display: flex; align-items: center; justify-content: center; }
+  .matrix .ax.v { writing-mode: vertical-rl; transform: rotate(180deg); }
+  .matrix .ax.h { padding-bottom: .8cqw; }
+  .mq { display: flex; flex-direction: column; min-height: 0; border: var(--hair) solid var(--s-frame); margin-bottom: 1.6cqw; }
+  .mq > b { flex: none; padding: .8cqw 1.2cqw; font-size: 1.2cqw; font-weight: 600; letter-spacing: .04em; border-bottom: var(--hair) solid var(--s-line); display: flex; justify-content: space-between; }
+  .mq > b small { font-weight: 400; color: var(--s-faint); letter-spacing: 0; }
+  .mq > .lines { flex: 1 1 0; }
+  .mq.q1 > b { background: #f6f7f7; }
+
+  /* 마인드맵 */
+  .mind { position: relative; flex: 1 1 0; min-height: 0; }
+  .mind svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const { h } = Bujo;
+
+const sorted = `
+<div class="pg">
+  <div class="head"><div class="bar">BRAIN DUMP</div>${h.dateLine()}</div>
+  ${h.table({
+    cols: [{ t: "머릿속에 있는 것을 모두 적기", l: true }, { t: "할 일", w: "5.4cqw" }, { t: "일정", w: "5.4cqw" }, { t: "메모", w: "5.4cqw" }, { t: "아이디어", w: "6.4cqw" }],
+    rows: 30,
+    cell: (r, c) => (c > 0 ? '<u class="dot"></u>' : "")
+  })}
+  <div class="ttl" style="margin:0"><small>다 적은 뒤 줄마다 해당하는 칸에 표시하고, 할 일 · 일정은 데일리나 먼슬리로 옮깁니다.</small></div>
+</div>`;
+
+const quad = (cls, t, k, hint) => `<div class="mq ${cls}"><b>${t}<small>${k}</small></b>${h.markLines(5, "•")}</div>`;
+const matrix = `
+<div class="pg">
+  <div class="head"><div class="bar">DUMP &amp; SORT</div>${h.dateLine()}</div>
+  <div class="fx" style="flex:5"><div class="ttl">DUMP <small>생각나는 대로 전부</small></div><div class="box dots" style="flex:1"></div></div>
+  <div class="fx" style="flex:5"><div class="ttl">SORT <small>긴급함 × 중요함으로 나누기</small></div>
+    <div class="matrix" style="flex:1">
+      <span></span><span class="ax h">긴급함</span><span class="ax h">긴급하지 않음</span>
+      <span class="ax v">중요함</span>${quad("q1", "DO", "지금 하기")}${quad("", "PLAN", "날짜 정하기")}
+      <span class="ax v">중요하지 않음</span>${quad("", "DELEGATE", "맡기기 · 줄이기")}${quad("", "DROP", "버리기")}
+    </div>
+  </div>
+</div>`;
+
+/** 마인드맵: 가운데 주제와 가지 6개 */
+const mindSvg = (() => {
+  const cx = 50, cy = 50, n = 6;
+  let s = `<ellipse cx="${cx}" cy="${cy}" rx="13" ry="7.5" fill="#fff" stroke="#9da2a4" stroke-width=".25"/>`;
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * 2 * Math.PI + Math.PI / 6;
+    const x = cx + 34 * Math.cos(a), y = cy + 33 * Math.sin(a);
+    const x0 = cx + 13 * Math.cos(a), y0 = cy + 7.5 * Math.sin(a);
+    s = `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x.toFixed(2)}" y2="${y.toFixed(2)}" stroke="#cfd3d4" stroke-width=".22"/>` + s +
+      `<ellipse cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" rx="9" ry="5" fill="#fff" stroke="#cfd3d4" stroke-width=".22"/>`;
+  }
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${s}</svg>`;
+})();
+
+const mindmap = `
+<div class="pg">
+  <div class="head"><div class="bar">MIND MAP</div>${h.dateLine()}</div>
+  <div class="box dots mind">${mindSvg}</div>
+  <div class="fx"><div class="ttl">NEXT ACTIONS <small>정리하고 나서 할 일</small></div><div class="box" style="height:10cqw">${h.checks(3)}</div></div>
+</div>`;
+
+Bujo.mount({
+  section: "collection",
+  id: "brain-dump",
+  name: "브레인 덤프",
+  en: "Brain Dump",
+  summary: "머릿속 생각을 정리하지 않고 일단 쏟아 내는 페이지입니다. 다 적고 나면 분류해서 할 일 · 일정은 해당 페이지로 옮기고 머리를 비웁니다.",
+  parts: [
+    "날짜 칸",
+    "자유 기록 영역 (줄 · 도트 · 마인드맵)",
+    "분류 칸: 할 일 · 일정 · 메모 · 아이디어",
+    "긴급 × 중요 매트릭스 (DO · PLAN · DELEGATE · DROP)"
+  ],
+  usage: [
+    "타이머를 5~10분 맞추고 떠오르는 것을 모두 적습니다. 크기나 순서는 신경 쓰지 않습니다.",
+    "다 적으면 줄마다 할 일 · 일정 · 메모 · 아이디어 중 하나로 표시합니다.",
+    "할 일은 긴급함과 중요함으로 나눠 매트릭스에 옮깁니다.",
+    "DO는 오늘 데일리로, PLAN은 먼슬리나 퓨처 로그로 옮깁니다."
+  ],
+  tips: [
+    "머리가 복잡한 날 아침이나 잠들기 전에 쓰면 효과가 큽니다.",
+    "마인드맵은 가운데에 주제를 적고, 가지마다 하위 생각을 이어 그립니다.",
+    "DROP에 적은 일은 과감히 지우세요. 버리는 것도 정리입니다."
+  ],
+  variants: [
+    { key: "sorted",  name: "분류 줄 노트", desc: "30줄에 쏟아 내고 줄마다 할 일 · 일정 · 메모 · 아이디어로 표시.", html: sorted },
+    { key: "matrix",  name: "덤프 + 매트릭스", desc: "위에서 쏟아 내고, 아래 긴급 × 중요 4칸으로 나눕니다.", html: matrix },
+    { key: "mindmap", name: "마인드맵",     desc: "가운데 주제와 가지 6개가 그려진 도트 페이지.", html: mindmap }
+  ]
+});
+</script>
+</body>
+</html>
