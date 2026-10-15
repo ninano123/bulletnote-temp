@@ -42,7 +42,8 @@
         { id: "monthly-calendar", href: "monthly-calendar.html", name: "먼슬리 캘린더" },
         { id: "monthly-log",      href: "monthly-log.html",      name: "먼슬리 로그" },
         { id: "weekly-spread",    href: "weekly.html",           name: "위클리" },
-        { id: "future-log",       href: "future-log.html",       name: "퓨처 로그" }
+        { id: "future-log",       href: "future-log.html",       name: "퓨처 로그" },
+        { id: "year-at-a-glance", href: "year.html",             name: "연간 개요" }
       ]
     }
   };
