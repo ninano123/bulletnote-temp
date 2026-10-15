@@ -59,7 +59,8 @@
     collection: {
       label: "D · COLLECTIONS",
       pages: [
-        { id: "goals", href: "goals.html", name: "목표 설정" }
+        { id: "goals", href: "goals.html", name: "목표 설정" },
+        { id: "project-planner", href: "project.html", name: "프로젝트 플래너" }
       ]
     }
   };
