@@ -39,7 +39,8 @@
     period: {
       label: "B · PERIODIC LOGS",
       pages: [
-        { id: "monthly-calendar", href: "monthly-calendar.html", name: "먼슬리 캘린더" }
+        { id: "monthly-calendar", href: "monthly-calendar.html", name: "먼슬리 캘린더" },
+        { id: "monthly-log",      href: "monthly-log.html",      name: "먼슬리 로그" }
       ]
     }
   };
