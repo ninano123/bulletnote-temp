@@ -1,0 +1,85 @@
+/* 공통 스타일 — index 및 각 템플릿 문서에서 공유
+ * 폰트(Pretendard)는 각 HTML의 <link crossorigin>으로 불러온다. (JPG 내보내기 시 폰트 임베드를 위해)
+ */
+:root {
+  --ink: #2b2d2e;
+  --ink-soft: #5c6163;
+  --ink-faint: #9aa0a2;
+  --line: #d4d7d8;
+  --line-soft: #e8eaeb;
+  --paper: #ffffff;
+  --bg: #f4f5f5;
+  --bar: #8e9394;        /* 레퍼런스 헤더 바 색상 */
+  --accent: #c0605a;     /* 일요일 표시 색상 */
+  --p1: #c0605a;
+  --p2: #c99a3e;
+  --p3: #8e9394;
+  --radius: 6px;
+  --font: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+a { color: inherit; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+.label-bar {
+  display: inline-block;
+  background: var(--bar);
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: .08em;
+  padding: 4px 14px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+/* 헤더 */
+header.hero { background: var(--paper); border-bottom: 1px solid var(--line); }
+header.hero .wrap { padding-top: 48px; padding-bottom: 36px; }
+header.hero h1 { font-size: 32px; font-weight: 700; margin: 14px 0 8px; letter-spacing: -.01em; }
+header.hero p { margin: 0; color: var(--ink-soft); max-width: 680px; }
+
+/* 상단 내비게이션 */
+nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+nav.toc ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; }
+nav.toc a { display: block; padding: 12px 12px; font-size: 14px; color: var(--ink-soft); text-decoration: none; white-space: nowrap; border-bottom: 2px solid transparent; }
+nav.toc a:hover { color: var(--ink); border-bottom-color: var(--bar); }
+nav.toc a[aria-current="page"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+
+main section { padding: 48px 0 8px; }
+main h2 { font-size: 22px; margin: 0 0 6px; }
+main h2 small { font-size: 14px; font-weight: 400; color: var(--ink-faint); margin-left: 6px; }
+.lead { color: var(--ink-soft); margin: 0 0 24px; }
+
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+
+footer { padding: 48px 0; color: var(--ink-faint); font-size: 13px; text-align: center; }
+
+@media (max-width: 600px) {
+  header.hero h1 { font-size: 26px; }
+}
+
+@media print {
+  body { background: #fff; }
+}

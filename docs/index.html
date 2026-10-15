@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하루 불릿저널 템플릿</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  /* 개요 */
+  .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .overview-grid .panel h3 { margin: 0 0 6px; font-size: 16px; }
+  .overview-grid .panel p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+  /* 사용법 */
+  ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 12px; }
+  ol.steps li { counter-increment: step; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  ol.steps li::before { content: counter(step); width: 32px; height: 32px; border: 1px solid var(--ink); border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  ol.steps strong { display: block; margin-bottom: 2px; }
+  ol.steps span { color: var(--ink-soft); font-size: 14px; }
+
+  /* 비율 */
+  .ratio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .ratio-card { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center; }
+  .ratio-shape { width: 100%; border: 1.5px solid var(--ink); background: repeating-linear-gradient(0deg, transparent 0 7px, var(--line-soft) 7px 8px); }
+  .ratio-card h3 { margin: 0; font-size: 16px; }
+  .ratio-card .meta { font-size: 13px; color: var(--ink-soft); margin: 2px 0 0; }
+  .ratio-card code { font-size: 12px; background: var(--bg); padding: 1px 6px; border-radius: 3px; }
+
+  /* 기호 */
+  .key-table { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); }
+  .key-table th, .key-table td { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); text-align: left; font-size: 14px; }
+  .key-table th { font-size: 12px; letter-spacing: .08em; color: var(--ink-faint); font-weight: 600; }
+  .key-table td.sym { width: 64px; font-size: 20px; text-align: center; font-weight: 600; }
+
+  /* 하루 흐름 */
+  .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+  .flow > div { padding: 18px 20px; border-right: 1px dashed var(--line); }
+  .flow > div:last-child { border-right: 0; }
+  .flow .when { font-size: 12px; letter-spacing: .1em; color: var(--ink-faint); font-weight: 600; }
+  .flow h3 { margin: 4px 0 6px; font-size: 16px; }
+  .flow p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+  /* 분류 */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .filters button { font: inherit; font-size: 13px; padding: 6px 14px; border: 1px solid var(--line); background: var(--paper); border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
+  .filters button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .category { margin-bottom: 36px; }
+  .category-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px; }
+  .category-head .code { font-size: 12px; font-weight: 700; color: #fff; background: var(--bar); padding: 2px 8px; }
+  .category-head h3 { margin: 0; font-size: 18px; }
+  .category-head p { margin: 0; color: var(--ink-soft); font-size: 14px; flex-basis: 100%; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .card .top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+  .card h4 { margin: 0; font-size: 15px; }
+  .card .en { font-size: 11px; letter-spacing: .08em; color: var(--ink-faint); text-transform: uppercase; }
+  .card p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+  .card ul { margin: 0; padding-left: 16px; font-size: 13px; color: var(--ink-soft); }
+  .card .foot { margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap; padding-top: 6px; border-top: 1px dashed var(--line-soft); }
+  .tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); white-space: nowrap; }
+  .prio { font-size: 11px; font-weight: 700; color: #fff; padding: 1px 7px; border-radius: 3px; white-space: nowrap; }
+  .prio.p1 { background: var(--p1); } .prio.p2 { background: var(--p2); } .prio.p3 { background: var(--p3); }
+  .status { font-size: 11px; color: var(--ink-faint); }
+  .status.done { color: var(--ink); font-weight: 600; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .summary div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
+  .summary b { display: block; font-size: 24px; }
+  .summary small { color: var(--ink-soft); }
+
+  @media (max-width: 600px) {
+    .flow > div { border-right: 0; border-bottom: 1px dashed var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="label-bar">DAILY BULLET JOURNAL</span>
+    <h1>하루 불릿저널 템플릿</h1>
+    <p>태블릿 노트 앱에서 쓸 불릿저널 속지 모음입니다. 템플릿마다 여러 고정 비율로 제공하므로 PDF나 JPG로 내보내 GoodNotes, Notability, Samsung Notes 같은 앱에 바로 넣을 수 있습니다.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="목차">
+  <div class="wrap">
+    <ul>
+      <li><a href="#overview">개요</a></li>
+      <li><a href="#usage">사용법</a></li>
+      <li><a href="#ratios">지원 비율</a></li>
+      <li><a href="#key">불릿 기호</a></li>
+      <li><a href="#flow">하루 흐름</a></li>
+      <li><a href="#catalog">템플릿 분류</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- 개요 -->
+  <section id="overview">
+    <h2>개요</h2>
+    <p class="lead">하루 단위 기록을 중심으로, 불릿저널을 운영하는 데 필요한 페이지를 분류해 템플릿으로 만듭니다.</p>
+    <div class="overview-grid">
+      <div class="panel">
+        <h3>하루 중심</h3>
+        <p>데일리 페이지가 핵심입니다. 월간·주간·트래커 페이지는 데일리 기록을 받쳐 주는 역할을 합니다.</p>
+      </div>
+      <div class="panel">
+        <h3>HTML로 작성</h3>
+        <p>모든 템플릿은 HTML 문서입니다. 브라우저에서 열어 바로 확인하고, 수정하고, 내보낼 수 있습니다.</p>
+      </div>
+      <div class="panel">
+        <h3>고정 비율</h3>
+        <p>태블릿 화면과 인쇄 용지에 맞춘 여러 비율을 제공합니다. 노트 앱으로 가져와도 여백이 어긋나지 않습니다.</p>
+      </div>
+      <div class="panel">
+        <h3>미니멀 그레이</h3>
+        <p>회색 선과 여백 위주로 디자인합니다. 손글씨와 색 펜을 쓸 자리를 남겨 둡니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 사용법 -->
+  <section id="usage">
+    <h2>사용법</h2>
+    <p class="lead">템플릿을 골라 태블릿 노트 앱으로 옮기기까지의 순서입니다.</p>
+    <ol class="steps">
+      <li><div><strong>템플릿 고르기</strong><span>아래 <a href="#catalog">템플릿 분류</a>에서 필요한 페이지를 찾아 엽니다.</span></div></li>
+      <li><div><strong>비율 고르기</strong><span>쓰는 태블릿에 맞는 비율을 선택합니다. 잘 모르겠다면 <a href="#ratios">지원 비율</a> 표를 참고하세요.</span></div></li>
+      <li><div><strong>PDF로 내보내기</strong><span>브라우저 인쇄(Ctrl/⌘ + P) → "PDF로 저장"을 선택합니다. 여백은 "없음", 배경 그래픽은 "켜기"로 설정합니다.</span></div></li>
+      <li><div><strong>JPG로 내보내기</strong><span>템플릿 페이지의 이미지 저장 버튼을 누르면 표에 적힌 픽셀 크기로 저장됩니다. (템플릿 제작 단계에서 추가 예정)</span></div></li>
+      <li><div><strong>노트 앱에 넣기</strong><span>PDF는 문서로 가져오거나, 노트 앱의 "사용자 템플릿/속지"로 등록해 매일 새 페이지로 추가해 씁니다.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- 지원 비율 -->
+  <section id="ratios">
+    <h2>지원 비율</h2>
+    <p class="lead">모든 템플릿은 아래 세로 비율로 제공됩니다. 주간 스프레드처럼 가로가 더 맞는 페이지는 가로 버전을 따로 둡니다.</p>
+    <div class="ratio-grid">
+      <div class="panel ratio-card">
+        <div class="ratio-shape" style="aspect-ratio: 1 / 1.4142;"></div>
+        <div>
+          <h3>ISO A 규격 <small>1 : 1.414</small></h3>
+          <p class="meta">A4·A5 인쇄, iPad Pro / Air에 가까움</p>
+          <p class="meta">PDF <code>210×297mm</code> · JPG <code>1654×2339</code></p>
+        </div>
+      </div>
+      <div class="panel ratio-card">
+        <div class="ratio-shape" style="aspect-ratio: 3 / 4;"></div>
+        <div>
+          <h3>3 : 4 <small>1 : 1.333</small></h3>
+          <p class="meta">iPad 기본형(9.7·10.2인치), 여러 안드로이드 태블릿</p>
+          <p class="meta">PDF <code>180×240mm</code> · JPG <code>1536×2048</code></p>
+        </div>
+      </div>
+      <div class="panel ratio-card">
+        <div class="ratio-shape" style="aspect-ratio: 10 / 16;"></div>
+        <div>
+          <h3>10 : 16 <small>1 : 1.6</small></h3>
+          <p class="meta">Galaxy Tab S 시리즈, 16:10 안드로이드 태블릿</p>
+          <p class="meta">PDF <code>160×256mm</code> · JPG <code>1600×2560</code></p>
+        </div>
+      </div>
+      <div class="panel ratio-card">
+        <div class="ratio-shape" style="aspect-ratio: 8.5 / 11;"></div>
+        <div>
+          <h3>US Letter <small>1 : 1.294</small></h3>
+          <p class="meta">미국 레터 용지, Remarkable·e-ink 기기 대응</p>
+          <p class="meta">PDF <code>8.5×11in</code> · JPG <code>1700×2200</code></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 불릿 기호 -->
+  <section id="key">
+    <h2>불릿 기호</h2>
+    <p class="lead">래피드 로깅에 쓰는 기본 기호입니다. 모든 템플릿은 이 기호를 기준으로 설계하며, 키(Key) 페이지 템플릿에도 들어갑니다.</p>
+    <table class="key-table">
+      <thead><tr><th>기호</th><th>의미</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td class="sym">•</td><td>할 일</td><td>해야 할 일. 처리하면 기호를 바꿉니다.</td></tr>
+        <tr><td class="sym">×</td><td>완료</td><td>끝낸 할 일 위에 X를 덧그립니다.</td></tr>
+        <tr><td class="sym">&gt;</td><td>이월</td><td>다음 날이나 다음 달로 넘긴 할 일입니다.</td></tr>
+        <tr><td class="sym">&lt;</td><td>일정 이동</td><td>퓨처 로그나 월간 페이지로 옮긴 할 일입니다.</td></tr>
+        <tr><td class="sym">○</td><td>이벤트</td><td>약속, 기념일처럼 날짜가 정해진 일입니다.</td></tr>
+        <tr><td class="sym">–</td><td>메모</td><td>기억할 내용, 생각, 관찰입니다.</td></tr>
+        <tr><td class="sym">*</td><td>중요</td><td>기호 앞에 붙여 우선순위를 표시합니다.</td></tr>
+        <tr><td class="sym">!</td><td>영감</td><td>아이디어나 다시 볼 만한 내용입니다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 하루 흐름 -->
+  <section id="flow">
+    <h2>하루 흐름</h2>
+    <p class="lead">데일리 템플릿을 하루 동안 어떤 순서로 쓰는지 보여 줍니다.</p>
+    <div class="flow">
+      <div><div class="when">MORNING</div><h3>계획</h3><p>타임박스 플래너에 할 일 3~6개를 적고 시간 블록에 배치합니다.</p></div>
+      <div><div class="when">DAYTIME</div><h3>기록</h3><p>래피드 로그 페이지에 할 일·이벤트·메모를 기호와 함께 바로 적습니다.</p></div>
+      <div><div class="when">EVENING</div><h3>회고</h3><p>데일리 회고에 감사, 잘한 일, 기분을 적고 트래커를 채웁니다.</p></div>
+      <div><div class="when">NEXT DAY</div><h3>이월</h3><p>못 끝낸 일은 &gt; 로 표시해 다음 날 페이지로 옮깁니다.</p></div>
+    </div>
+  </section>
+
+  <!-- 템플릿 분류 -->
+  <section id="catalog">
+    <h2>템플릿 분류</h2>
+    <p class="lead">불릿저널에 필요한 노트를 7개 분류로 정리했습니다. 우선순위 순서대로 템플릿을 만듭니다.</p>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="legend">
+      <span><b class="prio p1">P1</b> 핵심, 먼저 제작</span>
+      <span><b class="prio p2">P2</b> 자주 사용</span>
+      <span><b class="prio p3">P3</b> 선택, 확장</span>
+    </div>
+
+    <div class="filters" id="filters" role="group" aria-label="분류 필터"></div>
+    <div id="categories"></div>
+  </section>
+
+</main>
+
+<footer>하루 불릿저널 템플릿 · docs/index.html</footer>
+
+<script>
+/*
+ * 템플릿 카탈로그
+ * - 새 템플릿을 만들면 해당 항목에 href(예: "daily/timebox.html")와 designs(디자인 수)를 넣으면 '제작됨'으로 표시된다.
+ * - cycle: 사용 주기, prio: 1(핵심) ~ 3(선택)
+ */
+const CATALOG = [
+  {
+    code: "A", name: "데일리", en: "Daily",
+    desc: "하루를 계획하고, 기록하고, 돌아보는 핵심 페이지입니다.",
+    items: [
+      { id: "daily-timebox", href: "daily/timebox.html", designs: 4, name: "타임박스 플래너", en: "Time Box Planner", prio: 1, cycle: "매일",
+        desc: "할 일 목록, 브레인덤프, 시간대별 10분 단위 타임 플랜을 한 장에 담습니다.",
+        parts: ["날짜·요일", "To Do 체크리스트", "브레인 덤프", "04~24시 타임 플랜"] },
+      { id: "daily-rapid-log", href: "daily/rapid-log.html", designs: 3, name: "래피드 로그", en: "Rapid Log", prio: 1, cycle: "매일",
+        desc: "불릿 기호로 할 일·이벤트·메모를 빠르게 적는 기본 불릿저널 페이지입니다.",
+        parts: ["날짜 헤더", "도트 그리드 본문", "하단 기호 키"] },
+      { id: "daily-reflection", href: "daily/reflection.html", designs: 3, name: "데일리 회고", en: "Daily Reflection", prio: 1, cycle: "매일 저녁",
+        desc: "하루를 정리하는 질문형 페이지입니다.",
+        parts: ["오늘의 기분", "감사한 일 3가지", "잘한 일 / 아쉬운 일", "내일의 한 가지"] },
+      { id: "daily-all-in-one", href: "daily/all-in-one.html", designs: 2, name: "올인원 데일리", en: "All-in-one Daily", prio: 2, cycle: "매일",
+        desc: "계획, 기록, 회고, 미니 트래커를 한 페이지에 압축한 버전입니다.",
+        parts: ["Top 3", "시간표", "로그", "물·수면·기분 체크"] },
+      { id: "daily-half", href: "daily/half.html", designs: 3, name: "하프 데일리", en: "Half-page Daily", prio: 3, cycle: "매일",
+        desc: "한 페이지를 위아래로 나눠 이틀을 기록합니다. 기록이 적은 날에 맞습니다.",
+        parts: ["상·하단 날짜 칸", "로그 영역 2개"] }
+    ]
+  },
+  {
+    code: "B", name: "기간 로그", en: "Periodic Logs",
+    desc: "주·월·연 단위로 일정과 할 일을 내려다보는 페이지입니다.",
+    items: [
+      { id: "monthly-calendar", name: "먼슬리 캘린더", en: "Monthly Calendar", prio: 1, cycle: "매월",
+        desc: "한 달 일정을 달력 형태로 봅니다.",
+        parts: ["월·연도", "7×6 달력 그리드", "월간 목표 칸"] },
+      { id: "monthly-log", name: "먼슬리 로그", en: "Monthly Log", prio: 1, cycle: "매월",
+        desc: "원조 불릿저널 방식의 월간 페이지입니다. 날짜 세로 목록과 월간 할 일로 나뉩니다.",
+        parts: ["1~31일 세로 목록", "월간 태스크 리스트"] },
+      { id: "weekly-spread", name: "위클리 스프레드", en: "Weekly Spread", prio: 2, cycle: "매주",
+        desc: "일주일을 한눈에 보는 페이지입니다. 가로 비율 버전도 함께 제공합니다.",
+        parts: ["7일 칸", "주간 목표", "주간 습관 체크"] },
+      { id: "future-log", name: "퓨처 로그", en: "Future Log", prio: 2, cycle: "6~12개월",
+        desc: "앞으로 몇 달 동안의 일정과 할 일을 미리 적어 두는 페이지입니다.",
+        parts: ["월별 칸 6개 또는 12개", "월마다 미니 달력"] },
+      { id: "year-at-a-glance", name: "연간 개요", en: "Year at a Glance", prio: 3, cycle: "매년",
+        desc: "12개월 미니 달력을 한 장에 담은 연간 페이지입니다.",
+        parts: ["12개월 미니 달력", "연간 목표"] }
+    ]
+  },
+  {
+    code: "C", name: "트래커", en: "Trackers",
+    desc: "반복되는 행동과 상태를 칸 채우기로 기록하는 페이지입니다.",
+    items: [
+      { id: "habit-tracker", name: "습관 트래커", en: "Habit Tracker", prio: 1, cycle: "매월",
+        desc: "습관 여러 개를 1~31일 그리드로 체크합니다.",
+        parts: ["습관 이름 열", "31일 체크 그리드", "달성률"] },
+      { id: "mood-tracker", name: "기분 트래커", en: "Mood Tracker", prio: 2, cycle: "매월",
+        desc: "날마다 기분을 색이나 기호로 기록해 한 달의 흐름을 봅니다.",
+        parts: ["색상 범례", "31칸 무드 그리드"] },
+      { id: "sleep-tracker", name: "수면 트래커", en: "Sleep Tracker", prio: 3, cycle: "매월",
+        desc: "잠든 시간과 깬 시간을 막대로 칠합니다.",
+        parts: ["시간축", "날짜별 수면 막대", "수면 질 체크"] },
+      { id: "health-tracker", name: "건강 트래커", en: "Health Tracker", prio: 3, cycle: "매월",
+        desc: "물 섭취, 운동, 걸음 수처럼 건강 관련 지표를 기록합니다.",
+        parts: ["물 컵 체크", "운동 종류·시간", "체중 기록"] },
+      { id: "expense-tracker", name: "지출 트래커", en: "Expense Tracker", prio: 2, cycle: "매월",
+        desc: "날짜별 지출과 카테고리를 적는 간단한 가계부입니다.",
+        parts: ["날짜·항목·금액 표", "카테고리 합계", "월 예산"] }
+    ]
+  },
+  {
+    code: "D", name: "컬렉션", en: "Collections",
+    desc: "주제별로 모아 두는 페이지입니다. 날짜와 상관없이 계속 이어서 씁니다.",
+    items: [
+      { id: "goals", name: "목표 설정", en: "Goals", prio: 2, cycle: "분기·연",
+        desc: "큰 목표를 실행 단계로 나눕니다.",
+        parts: ["목표", "이유", "세부 단계 체크리스트", "기한"] },
+      { id: "project-planner", name: "프로젝트 플래너", en: "Project Planner", prio: 2, cycle: "수시",
+        desc: "프로젝트 하나의 할 일, 마일스톤, 메모를 관리합니다.",
+        parts: ["개요", "마일스톤 타임라인", "태스크", "메모"] },
+      { id: "brain-dump", name: "브레인 덤프", en: "Brain Dump", prio: 2, cycle: "수시",
+        desc: "머릿속 생각을 정리하지 않고 쏟아 내는 줄 노트입니다.",
+        parts: ["넓은 줄 영역", "분류 체크 칸"] },
+      { id: "reading-log", name: "독서 기록", en: "Reading Log", prio: 3, cycle: "수시",
+        desc: "읽은 책 목록과 한 줄 감상을 적습니다.",
+        parts: ["제목·저자", "기간", "별점", "한 줄 메모"] },
+      { id: "checklist", name: "체크리스트", en: "Checklist", prio: 3, cycle: "수시",
+        desc: "장보기, 여행 준비물 같은 범용 체크리스트입니다.",
+        parts: ["제목", "2단 체크박스 목록"] },
+      { id: "meal-planner", name: "식단 계획", en: "Meal Planner", prio: 3, cycle: "매주",
+        desc: "일주일 식단과 장볼 목록을 짭니다.",
+        parts: ["7일 × 아침·점심·저녁", "장보기 목록"] }
+    ]
+  },
+  {
+    code: "E", name: "회고", en: "Reviews",
+    desc: "일정 기간을 돌아보고 다음 기간을 준비하는 페이지입니다.",
+    items: [
+      { id: "weekly-review", name: "주간 회고", en: "Weekly Review", prio: 2, cycle: "매주",
+        desc: "한 주의 성과, 배운 점, 다음 주 계획을 정리합니다.",
+        parts: ["이번 주 하이라이트", "Keep / Problem / Try", "다음 주 Top 3"] },
+      { id: "monthly-review", name: "월간 회고", en: "Monthly Review", prio: 2, cycle: "매월",
+        desc: "트래커 결과와 함께 한 달을 돌아보고, 미완료 항목을 옮깁니다.",
+        parts: ["목표 달성 체크", "트래커 요약", "이월 항목", "다음 달 목표"] }
+    ]
+  },
+  {
+    code: "F", name: "설정", en: "Setup",
+    desc: "저널 앞부분에 한 번 만들어 두는 안내·색인 페이지입니다.",
+    items: [
+      { id: "cover", name: "표지", en: "Cover", prio: 3, cycle: "1회",
+        desc: "연도나 기간, 이름을 적는 표지입니다.",
+        parts: ["제목", "기간", "이름"] },
+      { id: "key", name: "키 (기호 범례)", en: "Key", prio: 2, cycle: "1회",
+        desc: "불릿 기호와 개인 기호, 색상 규칙을 정리합니다.",
+        parts: ["기본 기호 표", "사용자 기호 칸", "색상 규칙"] },
+      { id: "index", name: "인덱스", en: "Index", prio: 3, cycle: "1회·수시",
+        desc: "주제별 페이지 위치를 적는 색인입니다. 노트 앱 링크 기능과 함께 쓰면 좋습니다.",
+        parts: ["주제", "페이지 번호 열"] }
+    ]
+  },
+  {
+    code: "G", name: "속지", en: "Base Paper",
+    desc: "자유롭게 쓰는 기본 배경지입니다. 다른 템플릿의 배경으로도 씁니다.",
+    items: [
+      { id: "paper-dot", name: "도트 그리드", en: "Dot Grid", prio: 1, cycle: "기본",
+        desc: "불릿저널 표준 속지입니다. 5mm 간격 점이 찍혀 있습니다.",
+        parts: ["5mm 도트", "옅은 회색"] },
+      { id: "paper-grid", name: "모눈", en: "Grid", prio: 2, cycle: "기본",
+        desc: "표나 트래커를 직접 그릴 때 씁니다.",
+        parts: ["5mm 모눈"] },
+      { id: "paper-lined", name: "줄지", en: "Lined", prio: 2, cycle: "기본",
+        desc: "긴 글이나 일기를 쓸 때 씁니다.",
+        parts: ["7mm 줄 간격", "상단 날짜 칸"] },
+      { id: "paper-blank", name: "무지", en: "Blank", prio: 3, cycle: "기본",
+        desc: "그림이나 마인드맵을 그리는 빈 페이지입니다.",
+        parts: ["여백 가이드만 표시"] }
+    ]
+  }
+];
+
+const RATIO_COUNT = 4;
+
+function el(tag, attrs = {}, children = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "text") n.textContent = v;
+    else n.setAttribute(k, v);
+  }
+  for (const c of [].concat(children)) if (c) n.append(c);
+  return n;
+}
+
+function renderSummary() {
+  const all = CATALOG.flatMap(c => c.items);
+  const stats = [
+    [CATALOG.length, "분류"],
+    [all.length, "템플릿"],
+    [all.filter(i => i.prio === 1).length, "P1 핵심"],
+    [all.filter(i => i.href).length, "제작됨"],
+    [all.length * RATIO_COUNT, "비율별 총 페이지"]
+  ];
+  document.getElementById("summary").replaceChildren(
+    ...stats.map(([n, label]) => el("div", {}, [el("b", { text: n }), el("small", { text: label })]))
+  );
+}
+
+function renderCard(item) {
+  const title = item.href ? el("a", { href: item.href, text: item.name }) : document.createTextNode(item.name);
+  return el("article", { class: "card" }, [
+    el("div", { class: "top" }, [
+      el("div", {}, [el("h4", {}, title), el("div", { class: "en", text: item.en })]),
+      el("span", { class: `prio p${item.prio}`, text: `P${item.prio}` })
+    ]),
+    el("p", { text: item.desc }),
+    el("ul", {}, item.parts.map(p => el("li", { text: p }))),
+    el("div", { class: "foot" }, [
+      el("span", { class: "tag", text: item.cycle }),
+      el("span", { class: "tag", text: item.id }),
+      item.designs ? el("span", { class: "tag", text: `디자인 ${item.designs}종` }) : null,
+      el("span", { class: item.href ? "status done" : "status", text: item.href ? "제작됨" : "예정" })
+    ])
+  ]);
+}
+
+function renderCategories(filter) {
+  const host = document.getElementById("categories");
+  const list = filter === "ALL" ? CATALOG : CATALOG.filter(c => c.code === filter);
+  host.replaceChildren(...list.map(cat => el("div", { class: "category", id: `cat-${cat.code}` }, [
+    el("div", { class: "category-head" }, [
+      el("span", { class: "code", text: cat.code }),
+      el("h3", { text: `${cat.name} · ${cat.en}` }),
+      el("p", { text: cat.desc })
+    ]),
+    el("div", { class: "cards" }, [...cat.items].sort((a, b) => a.prio - b.prio).map(renderCard))
+  ])));
+}
+
+function renderFilters() {
+  const host = document.getElementById("filters");
+  const options = [["ALL", "전체"], ...CATALOG.map(c => [c.code, `${c.code}. ${c.name}`])];
+  host.replaceChildren(...options.map(([code, label]) => {
+    const b = el("button", { type: "button", "aria-pressed": code === "ALL" ? "true" : "false", text: label });
+    b.addEventListener("click", () => {
+      host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+      renderCategories(code);
+    });
+    return b;
+  }));
+}
+
+renderSummary();
+renderFilters();
+renderCategories("ALL");
+</script>
+</body>
+</html>

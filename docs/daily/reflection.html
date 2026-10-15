@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>데일리 회고 · 하루 불릿저널</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/common.css">
+<link rel="stylesheet" href="../assets/sheet.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="../assets/sheet.js"></script>
+<style>
+  /* 01 질문형 */
+  .rf-cell { height: 7.5cqw; flex-direction: row; align-items: center; justify-content: center; }
+  .tmr { height: 6cqw; flex-direction: row; align-items: center; }
+
+  /* 02 모닝 · 나이트 */
+  .fm-sec { display: grid; grid-template-columns: 4.6cqw 1fr; gap: 2.6cqw; min-height: 0; }
+  .fm-tag { writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; background: var(--s-bar); color: #fff; font-size: 1.3cqw; letter-spacing: .3em; }
+  .fm-tag.night { background: var(--s-ink); }
+  .fm-sec > .fx > .fx + .fx { margin-top: 2.4cqw; }
+
+  /* 03 점수 카드 */
+  .rate { display: flex; align-items: center; justify-content: space-between; padding: 1.3cqw 2.4cqw; border-bottom: var(--hair) solid var(--s-line); }
+  .rate:last-child { border-bottom: 0; }
+  .rate b { font-weight: 600; font-size: 1.35cqw; letter-spacing: .04em; }
+  .rate b small { font-weight: 400; font-size: 1.15cqw; color: var(--s-faint); margin-left: .8cqw; letter-spacing: 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const { h } = Bujo;
+
+/** 제목 + 상자 묶음 */
+const blk = (title, hint, body, flex = 1) =>
+  `<div class="fx" style="flex:${flex}"><div class="ttl">${title} <small>${hint}</small></div><div class="box" style="flex:1">${body}</div></div>`;
+
+const questions = `
+<div class="pg">
+  <div class="head"><div class="bar">DAILY REFLECTION</div>${h.dateLine()}</div>
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="fx"><div class="ttl">MOOD <small>오늘의 기분</small></div><div class="box rf-cell">${h.faces()}</div></div>
+    <div class="fx"><div class="ttl">ENERGY <small>오늘의 에너지</small></div><div class="box rf-cell">${h.scale(5)}</div></div>
+  </div>
+  ${blk("GRATITUDE", "감사한 일 세 가지", h.numLines(3), 3)}
+  <div class="cols" style="grid-template-columns:1fr 1fr;flex:5">
+    ${blk("WINS", "잘한 일", h.lines(5))}
+    ${blk("LESSONS", "아쉬운 점 · 배운 점", h.lines(5))}
+  </div>
+  ${blk("JOURNAL", "오늘의 기록", h.lines(7), 6)}
+  <div class="fx"><div class="ttl">TOMORROW <small>내일 꼭 할 한 가지</small></div><div class="box tmr"><u class="cb"></u></div></div>
+</div>`;
+
+const fiveMinute = `
+<div class="pg">
+  <div class="head"><div class="bar">FIVE MINUTE JOURNAL</div>${h.dateLine()}</div>
+  <div class="fm-sec" style="flex:8">
+    <span class="fm-tag">MORNING</span>
+    <div class="fx">
+      ${blk("I AM GRATEFUL FOR", "감사한 것", h.numLines(3), 3)}
+      ${blk("WHAT WOULD MAKE TODAY GREAT", "오늘을 멋지게 만들 것", h.numLines(3), 3)}
+      ${blk("AFFIRMATION", "오늘의 다짐", h.lines(2), 2)}
+    </div>
+  </div>
+  <div class="fm-sec" style="flex:6">
+    <span class="fm-tag night">NIGHT</span>
+    <div class="fx">
+      ${blk("AMAZING THINGS", "오늘 있었던 좋은 일", h.numLines(3), 3)}
+      ${blk("HOW COULD TODAY BE BETTER", "더 나아질 수 있었던 점", h.lines(3), 3)}
+    </div>
+  </div>
+</div>`;
+
+const rates = [["ENERGY", "에너지"], ["FOCUS", "집중"], ["MOOD", "기분"], ["SLEEP", "수면"], ["PEOPLE", "관계"]]
+  .map(([en, ko]) => `<div class="rate"><b>${en}<small>${ko}</small></b>${h.scale(10, "sm")}</div>`).join("");
+
+const scoreCard = `
+<div class="pg">
+  <div class="head"><div class="bar">DAILY SCORE</div>${h.dateLine()}</div>
+  <div class="fx"><div class="ttl">RATING <small>1 낮음 ~ 10 높음, 해당 숫자에 표시</small></div><div class="box">${rates}</div></div>
+  <div class="cols" style="grid-template-columns:1fr 1fr;flex:4">
+    ${blk("HIGHLIGHT", "오늘의 하이라이트", h.lines(4))}
+    ${blk("LESSON", "배운 것", h.lines(4))}
+  </div>
+  ${blk("JOURNAL", "자유 기록", h.lines(9), 7)}
+</div>`;
+
+Bujo.mount({
+  section: "daily",
+  id: "daily-reflection",
+  name: "데일리 회고",
+  en: "Daily Reflection",
+  summary: "하루를 마무리하며 기분과 감사, 잘한 일과 배운 점을 정리하는 질문형 페이지입니다. 짧게라도 매일 쓰면 한 달 뒤 돌아볼 거리가 쌓입니다.",
+  parts: [
+    "날짜 · 요일 칸",
+    "기분 · 에너지 표시 (얼굴 또는 숫자 척도)",
+    "감사한 일, 잘한 일, 배운 점 같은 질문",
+    "자유 기록 칸",
+    "디자인에 따라 내일 할 일, 아침 · 저녁 구분"
+  ],
+  usage: [
+    "잠들기 전 5~10분, 질문 순서대로 답을 적습니다.",
+    "기분과 에너지는 해당하는 얼굴이나 숫자에 동그라미를 칩니다.",
+    "답이 떠오르지 않는 칸은 비워 두어도 괜찮습니다.",
+    "5분 저널 디자인은 아침에 위쪽(MORNING), 밤에 아래쪽(NIGHT)을 씁니다."
+  ],
+  tips: [
+    "감사한 일은 구체적으로 적을수록 효과가 큽니다. \"점심\"보다 \"동료가 사 준 따뜻한 국수\"처럼요.",
+    "기분 · 점수는 월말에 기분 트래커로 옮겨 흐름을 보세요.",
+    "타임박스나 래피드 로그 다음 장에 붙여 하루 세트로 쓰면 편합니다."
+  ],
+  variants: [
+    { key: "questions",   name: "질문형",       desc: "기분 · 에너지, 감사, 잘한 일 · 배운 점, 자유 기록, 내일의 한 가지.", html: questions },
+    { key: "five-minute", name: "모닝 · 나이트", desc: "아침 3분, 밤 2분. 5분 저널 방식의 아침 · 저녁 질문.",              html: fiveMinute },
+    { key: "score",       name: "점수 카드",     desc: "에너지 · 집중 · 기분 · 수면 · 관계를 10점 척도로 기록하고 하이라이트를 적습니다.", html: scoreCard }
+  ]
+});
+</script>
+</body>
+</html>
