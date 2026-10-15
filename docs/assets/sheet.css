@@ -217,6 +217,38 @@ nav.toc.sub { position: static; }
 .cal-b > span.out { background: #fafbfb; }
 .cal-b.undated > span { color: transparent; }
 
+/* 표 — 칸 사이 선은 gap(배경색)으로 그린다 */
+.tbl { flex: 1 1 0; min-height: 0; display: grid; gap: var(--hair); background: var(--s-line); border: var(--hair) solid var(--s-frame); }
+.tbl > span { background: #fff; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; font-size: 1.15cqw; color: var(--s-soft); }
+.tbl > span.l { justify-content: flex-start; padding-left: 1.1cqw; }
+.tbl > span.th { background: #f6f7f7; font-size: 1.05cqw; font-weight: 600; letter-spacing: .05em; color: var(--s-soft); padding: .7cqw .3cqw; text-align: center; }
+.tbl > span.th.l { padding-left: 1.1cqw; }
+.tbl > span.we { background: #f8f9f9; }
+.tbl > span.no { background: repeating-linear-gradient(135deg, #eef0f0 0 .35cqw, #fff .35cqw .7cqw); }
+.tbl u.cb { margin: 0; width: 1.5cqw; height: 1.5cqw; }
+.tbl u.dot { width: 1.3cqw; height: 1.3cqw; border: var(--hair) solid var(--s-frame); border-radius: 50%; }
+
+/* 속지 배경 — 간격은 시트 너비 기준(cqw) */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--s-line) var(--hair), transparent var(--hair)),
+    linear-gradient(90deg, var(--s-line) var(--hair), transparent var(--hair));
+  background-size: var(--pitch, 2.5cqw) var(--pitch, 2.5cqw);
+}
+.bg-grid.major {
+  background-image:
+    linear-gradient(#b9bebf var(--stroke), transparent var(--stroke)),
+    linear-gradient(90deg, #b9bebf var(--stroke), transparent var(--stroke)),
+    linear-gradient(var(--s-line) var(--hair), transparent var(--hair)),
+    linear-gradient(90deg, var(--s-line) var(--hair), transparent var(--hair));
+  background-size: calc(var(--pitch, 2.5cqw) * 5) calc(var(--pitch, 2.5cqw) * 5), calc(var(--pitch, 2.5cqw) * 5) calc(var(--pitch, 2.5cqw) * 5), var(--pitch, 2.5cqw) var(--pitch, 2.5cqw), var(--pitch, 2.5cqw) var(--pitch, 2.5cqw);
+}
+.bg-lined {
+  background-image: linear-gradient(transparent calc(var(--pitch, 3.3cqw) - var(--hair)), var(--s-line) calc(var(--pitch, 3.3cqw) - var(--hair)));
+  background-size: 100% var(--pitch, 3.3cqw);
+}
+.dots.fine { background-size: 1.9cqw 1.9cqw; background-position: .95cqw .95cqw; }
+
 /* 절취선 */
 .cut { flex: none; border-top: var(--hair) dashed var(--s-faint); margin: 1.5cqw -2cqw; }
 .vcut { border-left: var(--hair) dashed var(--s-faint); }

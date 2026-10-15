@@ -45,6 +45,12 @@
         { id: "future-log",       href: "future-log.html",       name: "퓨처 로그" },
         { id: "year-at-a-glance", href: "year.html",             name: "연간 개요" }
       ]
+    },
+    tracker: {
+      label: "C · TRACKERS",
+      pages: [
+        { id: "habit-tracker", href: "habit.html", name: "습관 트래커" }
+      ]
     }
   };
 
@@ -166,6 +172,39 @@
       return `<div class="mc"><div class="mc-h">${weekHead(ctx.weekStart)}</div>` +
         `<div class="mc-b${ctx.dated ? "" : " undated"}">${cells.map(c =>
           `<span class="${dowCls(c.dow)}">${c.d || ""}</span>`).join("")}</div></div>`;
+    },
+
+    /**
+     * 그달의 날짜 목록: [{ d, dow, letter, cls, we }]
+     * 날짜 없음이면 1~31일, 요일은 비워 둔다
+     */
+    monthDays: ctx => {
+      const days = ctx.dated ? new Date(ctx.year, ctx.month, 0).getDate() : 31;
+      return Array.from({ length: days }, (_, k) => {
+        const d = k + 1;
+        if (!ctx.dated) return { d, dow: null, letter: "", cls: "", we: false };
+        const dow = new Date(ctx.year, ctx.month - 1, d).getDay();
+        return { d, dow, letter: WEEK[dow], cls: dowCls(dow), we: dow === 0 || dow === 6 };
+      });
+    },
+
+    /**
+     * 표. 칸 사이 선은 grid gap 으로 그린다.
+     * cols: [{ t: 머리글, w: 너비(기본 1fr), l: 왼쪽 정렬 }]
+     * rows: 행 수, cell(r, c) → 문자열 | { html, cls }, rowCls(r) → 행 전체 칸에 붙일 클래스
+     */
+    table: ({ cols, rows, head = true, cell, rowCls, cls = "" }) => {
+      const tmpl = cols.map(c => c.w || "1fr").join(" ");
+      const th = head ? cols.map(c => `<span class="th${c.l ? " l" : ""}">${c.t || ""}</span>`).join("") : "";
+      const body = rep(rows, r => {
+        const rc = rowCls ? rowCls(r) || "" : "";
+        return cols.map((c, ci) => {
+          const v = cell ? cell(r, ci) : "";
+          const o = v && typeof v === "object" ? v : { html: v || "" };
+          return `<span class="${[c.l ? "l" : "", rc, o.cls || ""].join(" ").trim()}">${o.html ?? ""}</span>`;
+        }).join("");
+      });
+      return `<div class="tbl ${cls}" style="grid-template-columns:${tmpl};grid-template-rows:${head ? "auto " : ""}repeat(${rows},1fr)">${th}${body}</div>`;
     },
 
     /** 큰 달력 그리드. ko=true면 요일을 한글로 */
