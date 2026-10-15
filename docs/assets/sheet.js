@@ -52,7 +52,8 @@
         { id: "habit-tracker", href: "habit.html", name: "습관 트래커" },
         { id: "mood-tracker",  href: "mood.html",  name: "기분 트래커" },
         { id: "sleep-tracker", href: "sleep.html", name: "수면 트래커" },
-        { id: "health-tracker", href: "health.html", name: "건강 트래커" }
+        { id: "health-tracker", href: "health.html", name: "건강 트래커" },
+        { id: "expense-tracker", href: "expense.html", name: "지출 트래커" }
       ]
     }
   };
