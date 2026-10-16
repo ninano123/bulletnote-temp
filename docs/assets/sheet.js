@@ -81,6 +81,12 @@
         { id: "key", href: "key.html", name: "키" },
         { id: "index", href: "index.html", name: "인덱스" }
       ]
+    },
+    paper: {
+      label: "G · BASE PAPER",
+      pages: [
+        { id: "paper-dot", href: "dot.html", name: "도트 그리드" }
+      ]
     }
   };
 

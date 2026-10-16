@@ -249,6 +249,22 @@ nav.toc.sub { position: static; }
 }
 .dots.fine { background-size: 1.9cqw 1.9cqw; background-position: .95cqw .95cqw; }
 
+/* 속지 공통: 머리글 한 줄 + 본문 */
+.paper-pg { padding: 5cqw 5cqw 4.6cqw; gap: 2cqw; }
+.paper-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 3cqw; padding-bottom: 1.2cqw; border-bottom: var(--hair) solid var(--s-frame); }
+.paper-head .tline { display: flex; align-items: flex-end; gap: 1.2cqw; flex: 1; max-width: 46cqw; font-size: 1.3cqw; font-weight: 600; letter-spacing: .06em; }
+.paper-head .tline i { flex: 1; height: 2.2cqw; border-bottom: var(--hair) solid var(--s-frame); }
+.paper-body { flex: 1 1 0; min-height: 0; position: relative; }
+.paper-body.dots { background-position: center; }
+/* 무지용 모서리 표시 */
+.corner { position: absolute; width: 3cqw; height: 3cqw; border-color: var(--s-frame); border-style: solid; border-width: 0; }
+.corner.tl { top: 0; left: 0; border-top-width: var(--hair); border-left-width: var(--hair); }
+.corner.tr { top: 0; right: 0; border-top-width: var(--hair); border-right-width: var(--hair); }
+.corner.bl { bottom: 0; left: 0; border-bottom-width: var(--hair); border-left-width: var(--hair); }
+.corner.br { bottom: 0; right: 0; border-bottom-width: var(--hair); border-right-width: var(--hair); }
+.page-no { align-self: flex-end; font-size: 1.1cqw; color: var(--s-faint); letter-spacing: .08em; display: flex; gap: .8cqw; align-items: flex-end; }
+.page-no i { display: inline-block; width: 5cqw; height: 1.6cqw; border-bottom: var(--hair) solid var(--s-frame); }
+
 /* 절취선 */
 .cut { flex: none; border-top: var(--hair) dashed var(--s-faint); margin: 1.5cqw -2cqw; }
 .vcut { border-left: var(--hair) dashed var(--s-faint); }
