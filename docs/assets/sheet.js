@@ -87,7 +87,8 @@
       pages: [
         { id: "paper-dot", href: "dot.html", name: "도트 그리드" },
         { id: "paper-grid", href: "grid.html", name: "모눈" },
-        { id: "paper-lined", href: "lined.html", name: "줄지" }
+        { id: "paper-lined", href: "lined.html", name: "줄지" },
+        { id: "paper-blank", href: "blank.html", name: "무지" }
       ]
     }
   };
