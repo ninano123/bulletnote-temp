@@ -63,7 +63,8 @@
         { id: "project-planner", href: "project.html", name: "프로젝트 플래너" },
         { id: "brain-dump", href: "brain-dump.html", name: "브레인 덤프" },
         { id: "reading-log", href: "reading.html", name: "독서 기록" },
-        { id: "checklist", href: "checklist.html", name: "체크리스트" }
+        { id: "checklist", href: "checklist.html", name: "체크리스트" },
+        { id: "meal-planner", href: "meal.html", name: "식단 계획" }
       ]
     }
   };
