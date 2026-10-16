@@ -78,7 +78,8 @@
       label: "F · SETUP",
       pages: [
         { id: "cover", href: "cover.html", name: "표지" },
-        { id: "key", href: "key.html", name: "키" }
+        { id: "key", href: "key.html", name: "키" },
+        { id: "index", href: "index.html", name: "인덱스" }
       ]
     }
   };
