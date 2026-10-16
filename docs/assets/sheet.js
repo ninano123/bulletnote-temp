@@ -73,6 +73,12 @@
         { id: "weekly-review", href: "weekly.html", name: "주간 회고" },
         { id: "monthly-review", href: "monthly.html", name: "월간 회고" }
       ]
+    },
+    setup: {
+      label: "F · SETUP",
+      pages: [
+        { id: "cover", href: "cover.html", name: "표지" }
+      ]
     }
   };
 
