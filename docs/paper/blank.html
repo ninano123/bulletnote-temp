@@ -9,59 +9,10 @@
 <link rel="stylesheet" href="../assets/sheet.css">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="../assets/sheet.js"></script>
-<style>
-  .story { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 2.6cqw 3cqw; }
-  .story > div { display: flex; flex-direction: column; gap: .8cqw; min-height: 0; }
-  .story .frm { flex: 1 1 0; min-height: 0; border: var(--hair) solid var(--s-frame); position: relative; }
-  .story .frm b { position: absolute; top: .6cqw; left: .9cqw; font-size: 1.1cqw; font-weight: 600; color: var(--s-faint); }
-  .story .lines { flex: none; height: 6cqw; }
-  .story .lines > i:last-child { border-bottom: var(--hair) solid var(--s-line); }
-</style>
 </head>
 <body>
 <div id="app"></div>
-<script>
-const { h } = Bujo;
-const head = `<div class="paper-head">${h.dateLine()}<span class="tline">TITLE<i></i></span></div>`;
-const pageNo = `<div class="page-no">PAGE<i></i></div>`;
-
-const corners = `<div class="pg paper-pg"><div class="paper-body"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span></div>${pageNo}</div>`;
-
-const framed = `<div class="pg paper-pg">${head}<div class="paper-body" style="border:var(--hair) solid var(--s-frame)"></div>${pageNo}</div>`;
-
-const storyboard = `
-<div class="pg paper-pg">
-  ${head}
-  <div class="story">${h.rep(6, k => `<div><div class="frm"><b>${k + 1}</b></div>${h.lines(2, "open")}</div>`)}</div>
-  ${pageNo}
-</div>`;
-
-Bujo.mount({
-  section: "paper",
-  id: "paper-blank",
-  name: "무지",
-  en: "Blank",
-  summary: "선이나 점이 없는 빈 속지입니다. 그림, 마인드맵, 손글씨 레터링처럼 자유롭게 그리는 페이지에 맞습니다.",
-  parts: [
-    "모서리 표시만 있는 빈 페이지",
-    "날짜 · 제목 머리글과 테두리",
-    "스토리보드 6칸 (칸마다 설명 2줄)"
-  ],
-  usage: [
-    "그림이나 마인드맵처럼 칸이 방해되는 내용을 그릴 때 씁니다.",
-    "스토리보드는 칸마다 장면 · 화면을 그리고 아래 줄에 설명을 적습니다.",
-    "노트 앱에서 사진이나 스크랩을 붙이는 페이지로도 좋습니다."
-  ],
-  tips: [
-    "모서리 표시는 인쇄할 때 여백 기준선 역할을 합니다.",
-    "스토리보드는 여행 계획, 앱 화면 구상, 영상 콘티에 활용할 수 있습니다."
-  ],
-  variants: [
-    { key: "corners",    name: "모서리 표시", desc: "모서리 표시와 페이지 번호만 있는 빈 페이지.", html: corners },
-    { key: "framed",     name: "헤더 + 테두리", desc: "날짜 · 제목 머리글과 테두리.", html: framed },
-    { key: "storyboard", name: "스토리보드",  desc: "번호 붙은 그림 칸 6개와 설명 줄.", html: storyboard }
-  ]
-});
-</script>
+<script src="blank.js"></script>
+<script>Bujo.mount("paper-blank");</script>
 </body>
 </html>

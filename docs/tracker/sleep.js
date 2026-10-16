@@ -1,0 +1,95 @@
+/* 템플릿: tracker/sleep — tracker/sleep.html 과 builder.html 에서 함께 쓴다 */
+(function () {
+  const CSS = `
+  .mini5 { display: flex; gap: .5cqw; }
+  .mini5 u { width: 1.3cqw; height: 1.3cqw; border: var(--hair) solid var(--s-frame); border-radius: 50%; }
+  /* 시간 칸 가운데 30분 점선 */
+  .hh { width: 0; height: 100%; border-left: var(--hair) dashed var(--s-line); }
+  .night { background: #f4f5f6 !important; }
+  .avg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2cqw; }
+  .avg > div { border: var(--hair) solid var(--s-frame); padding: 1cqw 1.4cqw; display: flex; flex-direction: column; gap: 1.6cqw; }
+  .avg b { font-size: 1.1cqw; font-weight: 600; letter-spacing: .06em; color: var(--s-soft); }
+  .avg i { border-bottom: var(--hair) solid var(--s-frame); height: 2cqw; }
+  `;
+
+  const { h } = Bujo;
+  const HOURS = [20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const five = '<span class="mini5">' + h.rep(5, () => "<u></u>") + "</span>";
+  const dayRowCls = days => r => (days[r] && days[r].we ? "we" : r >= days.length ? "no" : "");
+
+  const bars = ctx => {
+    const days = h.monthDays(ctx);
+    const cols = [{ t: "DAY", w: "3.8cqw" }, { t: "", w: "2.8cqw" }, ...HOURS.map(hr => ({ t: hr })), { t: "TOTAL", w: "5cqw" }, { t: "QUALITY", w: "9.4cqw" }];
+    return `
+  <div class="pg sat-blue">
+    <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">SLEEP TRACKER</div></div>
+    <div class="fx" style="flex:1"><div class="ttl">SLEEP BAR <small>잠든 시각부터 깬 시각까지 칠합니다 (20시 ~ 다음날 12시)</small></div>
+    ${h.table({
+      cols, rows: 31, rowCls: dayRowCls(days),
+      cell: (r, c) => {
+        const x = days[r];
+        if (!x) return "";
+        if (c === 0) return { html: x.d, cls: x.cls };
+        if (c === 1) return { html: x.letter, cls: x.cls };
+        if (c < 2 + HOURS.length) {
+          const hr = HOURS[c - 2];
+          return { html: '<i class="hh"></i>', cls: hr >= 0 && hr <= 5 ? "night" : "" };
+        }
+        return c === cols.length - 1 ? five : "";
+      }
+    })}</div>
+    <div class="avg">${["AVG SLEEP", "AVG BEDTIME", "AVG WAKE", "BEST NIGHT"].map(t => `<div><b>${t}</b><i></i></div>`).join("")}</div>
+  </div>`;
+  };
+
+  const journal = ctx => {
+    const days = h.monthDays(ctx);
+    return `
+  <div class="pg sat-blue">
+    <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">SLEEP LOG</div></div>
+    ${h.table({
+      cols: [{ t: "DAY", w: "3.8cqw" }, { t: "", w: "2.8cqw" }, { t: "취침", w: "8cqw" }, { t: "기상", w: "8cqw" }, { t: "총 시간", w: "7cqw" }, { t: "수면의 질", w: "10cqw" }, { t: "메모 · 꿈 · 컨디션", l: true }],
+      rows: 31, rowCls: dayRowCls(days),
+      cell: (r, c) => {
+        const x = days[r];
+        if (!x) return "";
+        if (c === 0) return { html: x.d, cls: x.cls };
+        if (c === 1) return { html: x.letter, cls: x.cls };
+        if (c === 2 || c === 3) return '<span class="unit">:</span>';
+        if (c === 4) return '<span class="unit">h</span>';
+        return c === 5 ? five : "";
+      }
+    })}
+  </div>`;
+  };
+
+  Bujo.define({
+    css: CSS,
+    section: "tracker",
+    id: "sleep-tracker",
+    name: "수면 트래커",
+    en: "Sleep Tracker",
+    date: "month",
+    summary: "잠든 시간과 깬 시간을 기록해 한 달의 수면 패턴을 봅니다. 막대형은 잠든 구간을 칠해 리듬을 눈으로 보고, 일지형은 시각과 컨디션을 숫자로 남깁니다.",
+    parts: [
+      "월 제목",
+      "날짜별 수면 막대 (20시 ~ 다음날 12시, 30분 점선)",
+      "총 수면 시간 · 수면의 질 (5단계)",
+      "월 평균 칸 또는 메모 칸"
+    ],
+    usage: [
+      "아침에 일어나면 전날 잠든 시각부터 깬 시각까지 칸을 칠합니다.",
+      "총 수면 시간을 적고, 개운한 정도를 동그라미 5개 중 골라 칠합니다.",
+      "월말에 평균 수면 시간과 평균 취침 · 기상 시각을 계산해 적습니다."
+    ],
+    tips: [
+      "새벽 0~5시 칸은 옅게 칠해 두어 밤 시간이 눈에 띄게 했습니다.",
+      "카페인 · 운동 · 화면 시간 같은 원인을 메모해 두면 수면의 질과 비교할 수 있습니다.",
+      "막대가 매일 비슷한 위치에 있을수록 수면 리듬이 일정하다는 뜻입니다."
+    ],
+    variants: [
+      { key: "bars",    name: "수면 막대", desc: "날짜 31줄 × 시간 16칸. 잠든 구간을 칠해 패턴을 봅니다.", html: bars },
+      { key: "journal", name: "수면 일지", desc: "취침 · 기상 시각, 총 시간, 수면의 질과 메모를 한 줄씩.", html: journal }
+    ]
+  });
+})();

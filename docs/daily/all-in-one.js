@@ -1,0 +1,93 @@
+/* 템플릿: daily/all-in-one — daily/all-in-one.html 과 builder.html 에서 함께 쓴다 */
+(function () {
+  const CSS = `
+  /* 미니 트래커 */
+  .trk > div, .strip > div { flex: 1 1 0; display: flex; align-items: center; gap: 1.4cqw; padding: 0 2.2cqw; border-bottom: var(--hair) solid var(--s-line); min-height: 0; }
+  .trk > div:last-child, .strip > div:last-child { border-bottom: 0; }
+  .trk b, .strip b { flex: none; width: 7.5cqw; font-weight: 600; font-size: 1.2cqw; letter-spacing: .05em; }
+  .trk .scale, .strip .scale { gap: .8cqw; }
+  .trk .cb { margin: 0; }
+  .strip { height: 11cqw; }
+  .strip .pair { justify-content: space-between; }
+  .strip .pair > span { display: flex; align-items: center; gap: 1.4cqw; }
+  .strip b small { font-weight: 400; color: var(--s-faint); margin-left: .6cqw; }
+  .strip b.wide { width: auto; white-space: nowrap; }
+  `;
+
+  const { h } = Bujo;
+
+  const tracker = `
+    <div><b>WATER</b>${h.cups(8)}</div>
+    <div><b>SLEEP</b><span class="blank"></span><span class="unit">시 ~</span><span class="blank"></span><span class="unit">시</span></div>
+    <div><b>MOOD</b>${h.faces("sm")}</div>
+    <div><b>MOVE</b><u class="cb"></u><span class="blank" style="width:12cqw"></span><span class="unit">분</span></div>`;
+
+  const dashboard = `
+  <div class="pg">
+    <div class="cols" style="grid-template-columns:45fr 55fr;align-items:start">
+      <div class="bar">ALL IN ONE DAILY</div>
+      ${h.dateBox()}
+    </div>
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <div class="fx"><div class="ttl">TOP 3 <small>오늘의 핵심</small></div><div class="box" style="height:15cqw">${h.checks(3)}</div></div>
+      <div class="fx"><div class="ttl">TRACKER</div><div class="box trk" style="height:15cqw">${tracker}</div></div>
+    </div>
+    <div class="cols" style="grid-template-columns:38fr 62fr;flex:1">
+      <div class="fx"><div class="ttl">SCHEDULE</div><div class="box" style="flex:1">${h.hourLines(6, 23)}</div></div>
+      <div class="fx"><div class="ttl">LOG <small>• 할 일 ○ 이벤트 – 메모</small></div><div class="box dots" style="flex:1"></div></div>
+    </div>
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <div class="fx"><div class="ttl">GRATITUDE <small>감사한 일</small></div><div class="box" style="height:8cqw">${h.lines(2)}</div></div>
+      <div class="fx"><div class="ttl">TOMORROW <small>내일 할 일</small></div><div class="box" style="height:8cqw">${h.checks(2)}</div></div>
+    </div>
+  </div>`;
+
+  const timeline = `
+  <div class="pg">
+    <div class="head"><div class="bar">ALL IN ONE · TIMELINE</div>${h.dateLine()}</div>
+    <div class="cols" style="grid-template-columns:34fr 66fr;flex:1">
+      <div class="fx"><div class="ttl">SCHEDULE <small>30분 단위</small></div><div class="box" style="flex:1">${h.hourLines(6, 23, true)}</div></div>
+      <div class="fx">
+        <div class="ttl">TOP 3</div><div class="box" style="flex:3">${h.numLines(3)}</div>
+        <div class="ttl mt">TO DO</div><div class="box" style="flex:7">${h.checks(7)}</div>
+        <div class="ttl mt">NOTES</div><div class="box dots" style="flex:9"></div>
+      </div>
+    </div>
+    <div class="box strip">
+      <div class="pair"><span><b>WATER</b>${h.cups(8)}</span><span><b>MOOD</b>${h.faces("sm")}</span></div>
+      <div><b class="wide">ONE LINE<small>한 줄 일기</small></b><span class="blank" style="flex:1"></span></div>
+    </div>
+  </div>`;
+
+  Bujo.define({
+    css: CSS,
+    section: "daily",
+    id: "daily-all-in-one",
+    name: "올인원 데일리",
+    en: "All-in-one Daily",
+    summary: "계획, 일정, 기록, 미니 트래커, 회고를 한 장에 모은 페이지입니다. 하루 한 장만 쓰고 싶을 때 고릅니다.",
+    parts: [
+      "날짜 · 요일 칸",
+      "Top 3 / To Do",
+      "시간별 스케줄 (1시간 또는 30분 단위, 6~23시)",
+      "로그 · 노트 (도트 그리드)",
+      "미니 트래커: 물, 수면, 기분, 운동",
+      "감사한 일 · 내일 할 일 또는 한 줄 일기"
+    ],
+    usage: [
+      "아침에 Top 3와 스케줄을 채웁니다.",
+      "낮에는 로그 칸에 불릿 기호로 기록합니다.",
+      "물을 마실 때마다 컵을 하나씩 칠합니다.",
+      "저녁에 기분 · 수면 · 운동을 표시하고, 마지막 줄을 채워 하루를 닫습니다."
+    ],
+    tips: [
+      "칸이 작으니 문장 대신 키워드로 적으세요.",
+      "트래커 값은 월말에 습관 · 기분 트래커로 옮기면 한 달 흐름이 보입니다.",
+      "일정이 많은 날은 타임박스 플래너, 기록이 많은 날은 래피드 로그를 함께 쓰세요."
+    ],
+    variants: [
+      { key: "dashboard", name: "대시보드", desc: "Top 3 · 트래커를 위에, 스케줄 · 로그를 가운데, 감사 · 내일을 아래에 둔 구성.", html: dashboard },
+      { key: "timeline",  name: "타임라인", desc: "왼쪽 30분 단위 타임라인, 오른쪽 할 일과 노트, 하단 물 · 기분 · 한 줄 일기.", html: timeline }
+    ]
+  });
+})();

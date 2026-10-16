@@ -273,13 +273,43 @@
 
   const el = html => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; };
   const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  const render = v => (typeof v.html === "function" ? v.html(ctx) : v.html);
   const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+  /* ───────────── 템플릿 등록 ───────────── */
+  // 템플릿 스크립트(daily/timebox.js 등)가 Bujo.define(opts)로 등록한다.
+  // 템플릿 전용 CSS는 .t-<id> 아래로 범위를 좁혀 넣으므로, 빌더처럼 여러 템플릿을 한 페이지에 불러와도 겹치지 않는다.
+  const registry = {};
+
+  function scopeCSS(css, scope) {
+    return css.replace(/\/\*[\s\S]*?\*\//g, "").split("}").map(rule => {
+      const i = rule.indexOf("{");
+      if (i < 0) return "";
+      const sel = rule.slice(0, i).trim(), body = rule.slice(i + 1);
+      if (!sel) return "";
+      return sel.split(",").map(s => `${scope} ${s.trim()}`).join(", ") + " {" + body + "}";
+    }).join("\n");
+  }
+
+  function define(opts) {
+    registry[opts.id] = opts;
+    numberVariants(opts.variants);
+    if (opts.css && !document.querySelector(`style[data-tpl="${opts.id}"]`)) {
+      const st = document.createElement("style");
+      st.dataset.tpl = opts.id;
+      st.textContent = scopeCSS(opts.css, `.t-${opts.id}`);
+      document.head.append(st);
+    }
+    return opts;
+  }
+
+  /** 템플릿 하나의 디자인을 그린 시트 정보 */
+  function sheetOf(tpl, v, c = ctx) {
+    return { html: typeof v.html === "function" ? v.html(c) : v.html, land: !!v.land, cls: `t-${tpl.id}` };
+  }
+
   /** 디자인 방향을 반영한 크기 */
-  function dims(v) {
-    const r = ratio;
-    return v.land
+  function dims(land, r = ratio) {
+    return land
       ? { ar: `${r.h} / ${r.w}`, mm: [r.mm[1], r.mm[0]], px: [r.px[1], r.px[0]] }
       : { ar: `${r.w} / ${r.h}`, mm: r.mm, px: r.px };
   }
@@ -300,6 +330,7 @@
 
   /* ───────────── 페이지 그리기 ───────────── */
   function mount(opts) {
+    if (typeof opts === "string") opts = registry[opts];
     page = opts;
     numberVariants(opts.variants);
     const sec = SECTIONS[opts.section];
@@ -389,7 +420,7 @@
       refresh();
     }));
     tb.querySelector('[data-act="pdf-all"]').addEventListener("click", () =>
-      printSheets(page.variants, `${page.id}_all_${ratio.id}${dateSuffix()}`));
+      printItems(page.variants.map(v => sheetOf(page, v)), `${page.id}_all_${ratio.id}${dateSuffix()}`));
     applySize(size);
     syncControls();
   }
@@ -407,14 +438,14 @@
         <article class="variant${v.land ? " land" : ""}" id="v-${v.key}">
           <div class="v-head"><span class="v-no">${v.no}</span>
             <div><h3>${v.name}${v.land ? ' <span class="v-tag">가로</span>' : ""}</h3><p>${v.desc}</p></div></div>
-          <div class="sheet-frame"><div class="sheet">${render(v)}</div></div>
+          <div class="sheet-frame"><div class="sheet t-${page.id}">${sheetOf(page, v).html}</div></div>
           <div class="v-actions">
             <button type="button" class="btn" data-act="pdf">PDF</button>
             <button type="button" class="btn" data-act="jpg">JPG</button>
           </div>
         </article>`);
-      card.querySelector('[data-act="pdf"]').addEventListener("click", () => printSheets([v], fileName(v)));
-      card.querySelector('[data-act="jpg"]').addEventListener("click", e => exportJpg(v, e.currentTarget));
+      card.querySelector('[data-act="pdf"]').addEventListener("click", () => printItems([sheetOf(page, v)], fileName(v)));
+      card.querySelector('[data-act="jpg"]').addEventListener("click", e => saveJpg(sheetOf(page, v), fileName(v), e.currentTarget));
       v.card = card;
       g.append(card);
     });
@@ -423,14 +454,14 @@
   /** 날짜 · 주 시작이 바뀌면 시트 내용을 다시 그린다 */
   function refresh() {
     syncControls();
-    page.variants.forEach(v => { v.card.querySelector(".sheet").innerHTML = render(v); });
+    page.variants.forEach(v => { v.card.querySelector(".sheet").innerHTML = sheetOf(page, v).html; });
     applyRatio();
   }
 
   function applyRatio() {
     page.variants.forEach(v => {
       const s = v.card.querySelector(".sheet");
-      s.style.setProperty("--ar", dims(v).ar);
+      s.style.setProperty("--ar", dims(v.land).ar);
       s.dataset.ratio = ratio.id;
     });
     pressed("ratio", ratio.id);
@@ -449,17 +480,18 @@
   }
 
   /* ───────────── PDF (인쇄) ───────────── */
-  // 세로는 기본 @page, 가로 디자인은 이름 붙은 @page land 를 써서 한 PDF 안에 방향을 섞을 수 있다
-  function printSheets(variants, name) {
+  // items: [{ html, land, cls }]
+  // 세로는 기본 @page, 가로 시트는 이름 붙은 @page land 를 써서 한 PDF 안에 방향을 섞을 수 있다
+  function printItems(items, name, r = ratio) {
     const root = document.createElement("div");
     root.id = "print-root";
-    root.innerHTML = variants.map(v => {
-      const { mm } = dims(v);
-      return `<div class="print-page${v.land ? " land" : ""}" style="width:${mm[0]}mm;height:${mm[1]}mm">` +
-        `<div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}">${render(v)}</div></div></div>`;
+    root.innerHTML = items.map(it => {
+      const { mm } = dims(it.land, r);
+      return `<div class="print-page${it.land ? " land" : ""}" style="width:${mm[0]}mm;height:${mm[1]}mm">` +
+        `<div class="sheet-frame"><div class="sheet ${it.cls || ""}" data-ratio="${r.id}">${it.html}</div></div></div>`;
     }).join("");
 
-    const [w, hgt] = ratio.mm;
+    const [w, hgt] = r.mm;
     const style = document.createElement("style");
     style.textContent = `@page { size: ${w}mm ${hgt}mm; margin: 0; } @page land { size: ${hgt}mm ${w}mm; margin: 0; }`;
 
@@ -479,33 +511,42 @@
   }
 
   /* ───────────── JPG ───────────── */
-  async function exportJpg(v, btn) {
-    if (!window.htmlToImage) { alert("이미지 변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요."); return; }
-    const [W, H] = dims(v).px;
-    const label = btn.textContent;
-    btn.disabled = true; btn.textContent = "저장 중…";
-
+  /** 시트 하나를 목표 픽셀 크기의 JPG data URL 로 만든다 */
+  async function jpgDataURL(it, r = ratio) {
+    if (!window.htmlToImage) throw new Error("이미지 변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.");
+    const [W, H] = dims(it.land, r).px;
     // 목표 픽셀 크기 그대로 화면 밖에 그린 뒤 캡처한다 (cqw 단위가 그대로 확대된다)
     const host = document.createElement("div");
     host.style.cssText = `position:fixed;left:${-W - 200}px;top:0;width:${W}px;pointer-events:none;`;
-    host.innerHTML = `<div class="sheet-frame"><div class="sheet" data-ratio="${ratio.id}" style="aspect-ratio:auto;height:${H}px;box-shadow:none">${render(v)}</div></div>`;
+    host.innerHTML = `<div class="sheet-frame"><div class="sheet ${it.cls || ""}" data-ratio="${r.id}" style="aspect-ratio:auto;height:${H}px;box-shadow:none">${it.html}</div></div>`;
     document.body.append(host);
-
     try {
       await document.fonts.ready;
       await nextFrame();
       const opts = { width: W, height: H, canvasWidth: W, canvasHeight: H, pixelRatio: 1, quality: 0.95, backgroundColor: "#fff" };
       const css = await embedFontCSS();
       if (css) opts.fontEmbedCSS = css; else opts.skipFonts = true;
-      const url = await window.htmlToImage.toJpeg(host.querySelector(".sheet"), opts);
-      const a = document.createElement("a");
-      a.href = url; a.download = fileName(v) + ".jpg";
-      document.body.append(a); a.click(); a.remove();
+      return await window.htmlToImage.toJpeg(host.querySelector(".sheet"), opts);
+    } finally {
+      host.remove();
+    }
+  }
+
+  function download(href, name) {
+    const a = document.createElement("a");
+    a.href = href; a.download = name;
+    document.body.append(a); a.click(); a.remove();
+  }
+
+  async function saveJpg(it, name, btn) {
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = "저장 중…";
+    try {
+      download(await jpgDataURL(it), name + ".jpg");
     } catch (e) {
       console.error(e);
       alert("JPG 저장에 실패했습니다: " + (e && e.message ? e.message : e));
     } finally {
-      host.remove();
       btn.disabled = false; btn.textContent = label;
     }
   }
@@ -533,5 +574,5 @@
     return fontPromise;
   }
 
-  window.Bujo = { mount, h, RATIOS };
+  window.Bujo = { mount, define, registry, h, RATIOS, SECTIONS, sheetOf, dims, printItems, jpgDataURL, download };
 })();

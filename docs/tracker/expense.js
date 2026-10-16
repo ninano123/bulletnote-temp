@@ -1,0 +1,78 @@
+/* 템플릿: tracker/expense — tracker/expense.html 과 builder.html 에서 함께 쓴다 */
+(function () {
+  const CSS = `
+  .sum4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2cqw; }
+  .sum4 > div { border: var(--hair) solid var(--s-frame); padding: 1cqw 1.4cqw; display: flex; flex-direction: column; gap: 1.4cqw; }
+  .sum4 b { font-size: 1.1cqw; font-weight: 600; letter-spacing: .06em; color: var(--s-soft); }
+  .sum4 b small { font-weight: 400; color: var(--s-faint); margin-left: .5cqw; }
+  .sum4 i { display: flex; justify-content: flex-end; border-bottom: var(--hair) solid var(--s-frame); height: 2.2cqw; font-size: 1.1cqw; color: var(--s-faint); }
+  .won { margin-left: auto; padding-right: .8cqw; color: var(--s-faint); font-size: 1cqw; }
+  `;
+
+  const { h } = Bujo;
+  const won = '<span class="won">원</span>';
+  const summary = `<div class="sum4">${[["BUDGET", "예산"], ["INCOME", "수입"], ["SPENT", "지출"], ["LEFT", "남은 돈"]]
+    .map(([e, k]) => `<div><b>${e}<small>${k}</small></b><i>원</i></div>`).join("")}</div>`;
+
+  const ledger = ctx => `
+  <div class="pg sat-blue">
+    <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">EXPENSE TRACKER</div></div>
+    ${summary}
+    <div class="cols" style="grid-template-columns:63fr 37fr;flex:1;gap:2.6cqw">
+      <div class="fx">
+        <div class="ttl">LEDGER <small>지출 내역</small></div>
+        ${h.table({ cols: [{ t: "DATE", w: "5.4cqw" }, { t: "내역", l: true }, { t: "분류", w: "8cqw" }, { t: "금액", w: "11cqw" }], rows: 30, cell: (r, c) => (c === 3 ? { html: won, cls: "l" } : "") })}
+      </div>
+      <div class="fx">
+        <div class="ttl">CATEGORY <small>분류별 합계</small></div>
+        ${h.table({ cols: [{ t: "분류", l: true }, { t: "예산", w: "8.4cqw" }, { t: "지출", w: "8.4cqw" }], rows: 10 })}
+        <div class="ttl mt">FIXED <small>고정 지출</small></div>
+        <div class="box" style="flex:.8">${h.checks(6)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  const calendar = ctx => `
+  <div class="pg sat-blue">
+    <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">SPENDING CALENDAR</div></div>
+    ${summary}
+    <div class="fx" style="flex:5"><div class="ttl">DAILY SPENT <small>날짜 칸에 그날 쓴 금액을 적습니다</small></div>${h.calGrid(ctx, ctx.year, ctx.month)}</div>
+    <div class="cols" style="grid-template-columns:3fr 2fr;flex:2.4">
+      <div class="fx"><div class="ttl">CATEGORY</div>${h.table({ cols: [{ t: "분류", l: true }, { t: "예산", w: "10cqw" }, { t: "지출", w: "10cqw" }, { t: "차이", w: "9cqw" }], rows: 6 })}</div>
+      <div class="fx"><div class="ttl">FIXED <small>고정 지출</small></div><div class="box" style="flex:1">${h.checks(6)}</div></div>
+    </div>
+  </div>`;
+
+  Bujo.define({
+    css: CSS,
+    section: "tracker",
+    id: "expense-tracker",
+    name: "지출 트래커",
+    en: "Expense Tracker",
+    date: "month",
+    weekStart: true,
+    summary: "한 달 예산과 지출을 기록하는 간단한 가계부입니다. 내역을 한 줄씩 적는 장부형과, 날짜별 지출 합계를 달력에 적는 달력형이 있습니다.",
+    parts: [
+      "월 제목",
+      "예산 · 수입 · 지출 · 남은 돈 요약",
+      "지출 내역 (날짜 · 내역 · 분류 · 금액) 또는 지출 달력",
+      "분류별 예산 · 지출 합계",
+      "고정 지출 체크리스트"
+    ],
+    usage: [
+      "월초에 예산과 분류별 예산(식비, 교통, 생활 등)을 정해 적습니다.",
+      "월세 · 통신비 같은 고정 지출을 FIXED에 적고, 빠져나가면 체크합니다.",
+      "돈을 쓸 때마다 내역에 적거나, 하루 합계를 달력 칸에 적습니다.",
+      "월말에 분류별로 더해 예산과 비교하고 남은 돈을 계산합니다."
+    ],
+    tips: [
+      "분류는 5~8개로 정해 두면 합계를 내기 편합니다.",
+      "장부형 30줄이 모자라면 같은 양식을 한 장 더 쓰세요.",
+      "달력형은 \"돈을 안 쓴 날\"에 동그라미를 쳐 무지출 챌린지로 써도 좋습니다."
+    ],
+    variants: [
+      { key: "ledger",   name: "장부형", desc: "지출 내역 30줄과 분류별 합계, 고정 지출 체크.", html: ledger },
+      { key: "calendar", name: "달력형", desc: "날짜 칸에 하루 지출 합계를 적고, 아래에 분류별 예산 비교.", html: calendar }
+    ]
+  });
+})();

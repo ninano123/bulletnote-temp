@@ -9,91 +9,10 @@
 <link rel="stylesheet" href="../assets/sheet.css">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="../assets/sheet.js"></script>
-<style>
-  .fl-grid { flex: 1 1 0; min-height: 0; display: grid; gap: 2.6cqw 3.4cqw; }
-  .fl-b { display: flex; flex-direction: column; min-height: 0; border-top: var(--stroke) solid var(--s-soft); padding-top: 1.2cqw; gap: 1cqw; }
-  .fl-c { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 16cqw 1fr; gap: 1.8cqw; }
-  .fl-c.nocal { grid-template-columns: 1fr; }
-  .fl-c > .lines { border-top: var(--hair) solid var(--s-line); }
-  .fl-c > .lines > i:last-child { border-bottom: var(--hair) solid var(--s-line); }
-  .yr { font-size: 1.5cqw; color: var(--s-soft); letter-spacing: .08em; }
-  .yr i { display: inline-block; width: 7cqw; border-bottom: var(--hair) solid var(--s-frame); height: 1.8cqw; vertical-align: bottom; }
-</style>
 </head>
 <body>
 <div id="app"></div>
-<script>
-const { h } = Bujo;
-
-/** 시작 월에서 k번째 달 블록 */
-const block = (ctx, k, { cal = true, n = 7 } = {}) => {
-  const { year, month } = h.addMonths(ctx.year, ctx.month, k);
-  return `<div class="fl-b">${h.monthTitle(ctx, year, month, "sm")}` +
-    `<div class="fl-c${cal ? "" : " nocal"}">${cal ? `<div>${h.miniCal(ctx, year, month)}</div>` : ""}${h.markLines(n, "•")}</div></div>`;
-};
-
-/** 기간 표시: 2026. 10 — 2027. 03 */
-const span = (ctx, count) => {
-  if (!ctx.dated) return `<div class="yr">YEAR <i></i></div>`;
-  const end = h.addMonths(ctx.year, ctx.month, count - 1);
-  return `<div class="yr">${ctx.year}. ${h.pad(ctx.month)} — ${end.year}. ${h.pad(end.month)}</div>`;
-};
-
-const six = ctx => `
-<div class="pg sat-blue">
-  <div class="head"><div class="bar">FUTURE LOG</div>${span(ctx, 6)}</div>
-  <div class="fl-grid" style="grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr)">
-    ${h.rep(6, k => block(ctx, k, { n: 8 }))}
-  </div>
-</div>`;
-
-const twelve = ctx => `
-<div class="pg sat-blue">
-  <div class="head"><div class="bar">FUTURE LOG · 12</div>${span(ctx, 12)}</div>
-  <div class="fl-grid" style="grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:2.4cqw 2.6cqw">
-    ${h.rep(12, k => block(ctx, k, { cal: false, n: 6 }))}
-  </div>
-</div>`;
-
-const landscape = ctx => `
-<div class="pg sat-blue" style="padding:4.2cqw 4.2cqw 3.8cqw;gap:2cqw">
-  <div class="head"><div class="bar">FUTURE LOG</div>${span(ctx, 6)}</div>
-  <div class="fl-grid" style="grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:2.2cqw 2.6cqw">
-    ${h.rep(6, k => block(ctx, k, { n: 7 }))}
-  </div>
-</div>`;
-
-Bujo.mount({
-  section: "period",
-  id: "future-log",
-  name: "퓨처 로그",
-  en: "Future Log",
-  date: "month",
-  weekStart: true,
-  summary: "앞으로 몇 달 동안의 일정과 할 일을 미리 적어 두는 페이지입니다. 이번 달이 아닌 일은 여기에 적었다가, 그달이 되면 먼슬리 페이지로 옮깁니다.",
-  parts: [
-    "기간 표시 (시작 월 — 끝 월)",
-    "월별 칸 6개 또는 12개",
-    "월마다 미니 달력 (12개월형 제외)",
-    "할 일 · 일정 줄"
-  ],
-  usage: [
-    "툴바에서 날짜 \"지정\"을 고르고 시작할 연 · 월을 선택합니다. 그 달부터 6개월(또는 12개월)이 차례로 채워집니다.",
-    "날짜가 정해진 일은 \"12 · 병원\"처럼 날짜를 앞에 붙여 해당 월 칸에 적습니다.",
-    "데일리 · 먼슬리에서 미래로 미룬 일(<)을 이곳으로 옮깁니다.",
-    "새 달이 시작되면 그달 칸의 내용을 먼슬리 캘린더 · 로그로 옮깁니다."
-  ],
-  tips: [
-    "날짜 \"없음\"으로 두면 월 이름 칸이 비어 있어 아무 달부터나 시작할 수 있습니다.",
-    "12개월형은 한 해 전체의 큰 일정(시험, 여행, 기념일)을 모아 볼 때 좋습니다.",
-    "미니 달력에 동그라미를 쳐 두면 날짜를 한눈에 찾기 쉽습니다."
-  ],
-  variants: [
-    { key: "six",       name: "6개월",     desc: "2 × 3 칸. 월마다 미니 달력과 할 일 줄.", html: six },
-    { key: "twelve",    name: "12개월",    desc: "3 × 4 칸에 1년. 달력 없이 줄만 담은 압축형.", html: twelve },
-    { key: "landscape", name: "가로 6개월", desc: "가로 방향 3 × 2 칸. 미니 달력과 할 일 줄.", html: landscape, land: true }
-  ]
-});
-</script>
+<script src="future-log.js"></script>
+<script>Bujo.mount("future-log");</script>
 </body>
 </html>

@@ -9,104 +9,10 @@
 <link rel="stylesheet" href="../assets/sheet.css">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="../assets/sheet.js"></script>
-<style>
-  /* 색상 범례: 칠할 칸 + 얼굴 + 의미 */
-  .legend5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2cqw; }
-  .legend5 > span { display: flex; align-items: center; gap: .9cqw; }
-  .legend5 u { flex: none; width: 2.6cqw; height: 2.6cqw; border: var(--hair) solid var(--s-frame); }
-  .legend5 .fc { flex: none; width: 2.8cqw; height: 2.8cqw; color: var(--s-soft); }
-  .legend5 i { flex: 1; height: 2cqw; border-bottom: var(--hair) solid var(--s-frame); }
-  .fc svg { width: 100%; height: 100%; display: block; }
-
-  .tbl .fc { width: 2.6cqw; height: 2.6cqw; color: var(--s-soft); }
-  .dh { display: flex; flex-direction: column; align-items: center; line-height: 1.25; }
-  .dh small { font-size: .85cqw; font-weight: 400; }
-  .mini5 { display: flex; gap: .6cqw; }
-  .mini5 u { width: 1.4cqw; height: 1.4cqw; border: var(--hair) solid var(--s-frame); border-radius: 50%; }
-</style>
 </head>
 <body>
 <div id="app"></div>
-<script>
-const { h } = Bujo;
-
-const legend = `<div class="legend5">${h.rep(5, k => `<span><u></u><span class="fc">${h.face(k)}</span><i></i></span>`)}</div>`;
-const dayHead = x => `<span class="dh"><b class="${x.cls}">${x.d}</b>${x.letter ? `<small class="${x.cls}">${x.letter}</small>` : ""}</span>`;
-
-const calendar = ctx => `
-<div class="pg sat-blue">
-  <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">MOOD TRACKER</div></div>
-  <div class="fx"><div class="ttl">LEGEND <small>칸에 칠할 색과 의미</small></div>${legend}</div>
-  <div class="fx" style="flex:1">${h.calGrid(ctx, ctx.year, ctx.month)}</div>
-  <div class="fx"><div class="ttl">NOTES <small>이달의 기분을 바꾼 일</small></div><div class="box" style="height:12cqw">${h.lines(4)}</div></div>
-</div>`;
-
-const graph = ctx => {
-  const days = h.monthDays(ctx);
-  const cols = [{ t: "", w: "4.6cqw" }, ...days.map(x => ({ t: dayHead(x) }))];
-  return `
-<div class="pg sat-blue">
-  <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">MOOD GRAPH</div></div>
-  <div class="fx" style="flex:3"><div class="ttl">MOOD <small>그날의 높이에 점을 찍고 선으로 잇습니다</small></div>
-    ${h.table({ cols, rows: 5, cell: (r, c) => (c === 0 ? `<span class="fc">${h.face(r)}</span>` : { html: '<u class="dot" style="border:0;background:#d6dadb;width:.5cqw;height:.5cqw"></u>', cls: days[c - 1].we ? "we" : "" }) })}</div>
-  <div class="fx" style="flex:3"><div class="ttl">ENERGY <small>1 ~ 5</small></div>
-    ${h.table({ cols, rows: 5, cell: (r, c) => (c === 0 ? `${5 - r}` : { html: "", cls: days[c - 1].we ? "we" : "" }) })}</div>
-  <div class="cols" style="grid-template-columns:1fr 1fr;flex:2">
-    <div class="fx"><div class="ttl">GOOD DAYS <small>기분 좋았던 날의 공통점</small></div><div class="box" style="flex:1">${h.lines(4)}</div></div>
-    <div class="fx"><div class="ttl">HARD DAYS <small>힘들었던 날의 공통점</small></div><div class="box" style="flex:1">${h.lines(4)}</div></div>
-  </div>
-</div>`;
-};
-
-const journal = ctx => {
-  const days = h.monthDays(ctx);
-  const five = '<span class="mini5">' + h.rep(5, () => "<u></u>") + "</span>";
-  return `
-<div class="pg sat-blue">
-  <div class="head">${h.monthTitle(ctx, ctx.year, ctx.month)}<div class="bar sm">MOOD JOURNAL</div></div>
-  ${h.table({
-    cols: [{ t: "DAY", w: "3.8cqw" }, { t: "", w: "2.8cqw" }, { t: "MOOD 좋음 → 나쁨", w: "13cqw" }, { t: "ENERGY", w: "13cqw" }, { t: "한 줄 기록", l: true }],
-    rows: 31,
-    rowCls: r => (days[r] && days[r].we ? "we" : r >= days.length ? "no" : ""),
-    cell: (r, c) => {
-      const x = days[r];
-      if (!x) return "";
-      return [{ html: x.d, cls: x.cls }, { html: x.letter, cls: x.cls }, five, five, ""][c];
-    }
-  })}
-</div>`;
-};
-
-Bujo.mount({
-  section: "tracker",
-  id: "mood-tracker",
-  name: "기분 트래커",
-  en: "Mood Tracker",
-  date: "month",
-  weekStart: true,
-  summary: "날마다 기분을 색이나 점으로 남겨 한 달의 흐름을 봅니다. 기분이 오르내린 날을 데일리 기록과 비교하면 무엇이 나를 움직이는지 보입니다.",
-  parts: [
-    "월 제목",
-    "색상 범례 (얼굴 5단계 + 의미)",
-    "무드 캘린더 · 그래프 · 일지 중 하나",
-    "기분에 영향을 준 일 메모"
-  ],
-  usage: [
-    "월초에 범례 5칸에 색을 정해 칠하고 의미를 적습니다.",
-    "하루를 마치며 그날 칸을 해당 색으로 칠하거나, 그래프에 점을 찍습니다.",
-    "월말에 좋았던 날과 힘들었던 날의 공통점을 적어 봅니다."
-  ],
-  tips: [
-    "색은 5개 이하로 정하면 한눈에 읽기 쉽습니다.",
-    "그래프형은 기분과 에너지를 나눠 기록합니다. 둘이 따로 움직이는 날을 찾아보세요.",
-    "데일리 회고의 기분 표시를 그대로 옮겨 적으면 따로 고민할 필요가 없습니다."
-  ],
-  variants: [
-    { key: "calendar", name: "무드 캘린더", desc: "달력 칸을 그날 기분의 색으로 칠합니다.", html: calendar },
-    { key: "graph",    name: "무드 그래프", desc: "기분 · 에너지를 날짜별 높이로 찍어 선 그래프로 잇습니다.", html: graph },
-    { key: "journal",  name: "무드 일지",   desc: "날마다 기분 · 에너지 동그라미와 한 줄 기록.", html: journal }
-  ]
-});
-</script>
+<script src="mood.js"></script>
+<script>Bujo.mount("mood-tracker");</script>
 </body>
 </html>

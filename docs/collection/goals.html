@@ -9,103 +9,10 @@
 <link rel="stylesheet" href="../assets/sheet.css">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="../assets/sheet.js"></script>
-<style>
-  .big-goal { height: 12cqw; }
-  .big-goal .lines > i { font-size: 1.6cqw; }
-
-  /* 진행 막대 10칸 */
-  .prog { display: flex; align-items: center; gap: 1cqw; font-size: 1.05cqw; color: var(--s-faint); }
-  .prog > span { flex: 1; display: grid; grid-template-columns: repeat(10, 1fr); gap: .4cqw; }
-  .prog u { height: 1.6cqw; border: var(--hair) solid var(--s-frame); }
-
-  .q4 { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2.6cqw 3cqw; }
-  .qcell { display: flex; flex-direction: column; gap: 1.2cqw; min-height: 0; border-top: var(--stroke) solid var(--s-soft); padding-top: 1.2cqw; }
-  .qcell .no { font-size: 3cqw; font-weight: 700; color: var(--s-line); line-height: 1; }
-
-  .areas { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 2.4cqw 3cqw; }
-</style>
 </head>
 <body>
 <div id="app"></div>
-<script>
-const { h } = Bujo;
-const prog = '<div class="prog">0%<span>' + h.rep(10, () => "<u></u>") + "</span>100%</div>";
-
-const breakdown = `
-<div class="pg">
-  <div class="head"><div class="bar">GOAL SETTING</div>${h.dateLine()}</div>
-  <div class="fx"><div class="ttl">GOAL <small>이루고 싶은 것 한 문장</small></div><div class="box big-goal">${h.lines(2)}</div></div>
-  <div class="cols" style="grid-template-columns:1fr 1fr">
-    <div class="fx"><div class="ttl">WHY <small>왜 이루고 싶은가</small></div><div class="box" style="height:11cqw">${h.lines(3)}</div></div>
-    <div class="fx"><div class="ttl">SUCCESS LOOKS LIKE <small>이루었다는 기준</small></div><div class="box" style="height:11cqw">${h.lines(3)}</div></div>
-  </div>
-  <div class="cols" style="grid-template-columns:62fr 38fr;flex:1">
-    <div class="fx"><div class="ttl">ACTION STEPS <small>실행 단계</small></div>
-      ${h.table({ cols: [{ t: "#", w: "3.6cqw" }, { t: "할 일", l: true }, { t: "기한", w: "8cqw" }, { t: "DONE", w: "5cqw" }], rows: 12, cell: (r, c) => (c === 0 ? r + 1 : c === 3 ? '<u class="cb"></u>' : "") })}</div>
-    <div class="fx">
-      <div class="ttl">OBSTACLES <small>예상되는 장애물</small></div><div class="box" style="flex:4">${h.lines(4)}</div>
-      <div class="ttl mt">SUPPORT <small>도움 · 자원</small></div><div class="box" style="flex:3">${h.lines(3)}</div>
-      <div class="ttl mt">REWARD <small>보상</small></div><div class="box" style="flex:2">${h.lines(2)}</div>
-    </div>
-  </div>
-  <div class="cols" style="grid-template-columns:1fr 1fr">
-    <div class="fx"><div class="ttl">DEADLINE <small>목표일</small></div><div class="box" style="height:6cqw;flex-direction:row;align-items:center;padding-left:1.6cqw">${h.dateLine().replace("<b>DATE</b>", "")}</div></div>
-    <div class="fx"><div class="ttl">PROGRESS</div><div class="box" style="height:6cqw;justify-content:center;padding:0 1.6cqw">${prog}</div></div>
-  </div>
-</div>`;
-
-const quarter = `
-<div class="pg">
-  <div class="head"><div class="bar">QUARTER GOALS</div><div class="dateline"><b>Q</b><i style="width:4cqw"></i><b style="margin-left:2cqw">YEAR</b><i></i></div></div>
-  <div class="q4">${h.rep(4, k => `
-    <div class="qcell">
-      <div class="ttl" style="margin:0"><span class="no">${k + 1}</span>GOAL</div>
-      <div class="box" style="height:8cqw">${h.lines(2)}</div>
-      <div class="ttl" style="margin:0">KEY RESULTS <small>측정 가능한 결과</small></div>
-      <div class="box" style="flex:1">${h.checks(4)}</div>
-      ${prog}
-    </div>`)}</div>
-</div>`;
-
-const AREAS = [["HEALTH", "건강"], ["WORK", "일 · 커리어"], ["PEOPLE", "관계"], ["MONEY", "돈"], ["GROWTH", "배움 · 성장"], ["JOY", "즐거움 · 취미"]];
-const lifeAreas = `
-<div class="pg">
-  <div class="head"><div class="bar">LIFE GOALS</div><div class="dateline"><b>YEAR</b><i></i></div></div>
-  <div class="fx"><div class="ttl">WORD OF THE YEAR <small>올해를 한 단어로</small></div><div class="box" style="height:7cqw"></div></div>
-  <div class="areas">${AREAS.map(([e, k]) =>
-    `<div class="fx"><div class="ttl">${e} <small>${k}</small></div><div class="box" style="flex:1">${h.markLines(5, "•")}</div></div>`).join("")}</div>
-</div>`;
-
-Bujo.mount({
-  section: "collection",
-  id: "goals",
-  name: "목표 설정",
-  en: "Goals",
-  summary: "큰 목표를 실행할 수 있는 단계로 나누는 페이지입니다. 목표 하나를 깊게 쪼개거나, 분기 목표 4개를 나란히 두거나, 삶의 영역별로 한 해 목표를 정리합니다.",
-  parts: [
-    "목표 문장 · 이유 · 성공 기준",
-    "실행 단계 표 (할 일 · 기한 · 완료)",
-    "장애물 · 도움 · 보상",
-    "진행 막대 (10칸)",
-    "분기 목표 4칸 / 삶의 영역 6칸"
-  ],
-  usage: [
-    "목표를 한 문장으로 적고, 왜 이루고 싶은지 적습니다.",
-    "\"이루었다\"고 말할 수 있는 기준을 숫자나 상태로 정합니다.",
-    "실행 단계를 작게 나누어 기한을 붙이고, 끝낼 때마다 체크합니다.",
-    "단계를 끝낼 때마다 진행 막대를 한 칸씩 칠합니다."
-  ],
-  tips: [
-    "실행 단계는 하루 안에 끝낼 수 있을 만큼 작게 나누세요.",
-    "분기 목표는 3개월에 끝낼 수 있는 크기로, 핵심 결과는 측정 가능하게 적습니다.",
-    "실행 단계는 먼슬리 로그나 데일리로 옮겨 날짜를 정해야 실제로 움직입니다."
-  ],
-  variants: [
-    { key: "breakdown", name: "목표 분해",  desc: "목표 하나를 이유 · 기준 · 실행 단계 · 장애물 · 보상으로 나눕니다.", html: breakdown },
-    { key: "quarter",   name: "분기 목표",  desc: "목표 4개와 핵심 결과, 진행 막대를 2 × 2 칸에.", html: quarter },
-    { key: "areas",     name: "영역별 목표", desc: "올해의 단어와 건강 · 일 · 관계 · 돈 · 배움 · 즐거움 6개 영역.", html: lifeAreas }
-  ]
-});
-</script>
+<script src="goals.js"></script>
+<script>Bujo.mount("goals");</script>
 </body>
 </html>
