@@ -85,7 +85,8 @@
     paper: {
       label: "G · BASE PAPER",
       pages: [
-        { id: "paper-dot", href: "dot.html", name: "도트 그리드" }
+        { id: "paper-dot", href: "dot.html", name: "도트 그리드" },
+        { id: "paper-grid", href: "grid.html", name: "모눈" }
       ]
     }
   };
