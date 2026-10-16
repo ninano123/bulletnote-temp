@@ -66,6 +66,12 @@
         { id: "checklist", href: "checklist.html", name: "체크리스트" },
         { id: "meal-planner", href: "meal.html", name: "식단 계획" }
       ]
+    },
+    review: {
+      label: "E · REVIEWS",
+      pages: [
+        { id: "weekly-review", href: "weekly.html", name: "주간 회고" }
+      ]
     }
   };
 
