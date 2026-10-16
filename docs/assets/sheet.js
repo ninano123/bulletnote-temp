@@ -70,7 +70,8 @@
     review: {
       label: "E · REVIEWS",
       pages: [
-        { id: "weekly-review", href: "weekly.html", name: "주간 회고" }
+        { id: "weekly-review", href: "weekly.html", name: "주간 회고" },
+        { id: "monthly-review", href: "monthly.html", name: "월간 회고" }
       ]
     }
   };
