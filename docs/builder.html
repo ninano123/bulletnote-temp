@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나만의 불릿저널 만들기</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<link rel="stylesheet" href="assets/sheet.css">
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  .crumb { font-size: 13px; color: var(--ink-soft); text-decoration: none; }
+  .crumb:hover { color: var(--ink); }
+  header.hero .label-bar { margin-top: 18px; }
+  header.hero .wrap { padding-bottom: 28px; }
+
+  /* 단계 표시 */
+  .stepper-wrap { position: sticky; top: 0; z-index: 6; background: rgba(255,255,255,.95); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+  .stepper-wrap .wrap { display: flex; align-items: center; gap: 12px; }
+  #stepper { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex: 1; min-width: 0; overflow-x: auto; }
+  #stepper button { font: inherit; font-size: 14px; display: flex; align-items: center; gap: 8px; padding: 12px 10px; border: 0; background: none; cursor: pointer; color: var(--ink-faint); border-bottom: 2px solid transparent; white-space: nowrap; }
+  #stepper b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid currentColor; font-size: 12px; }
+  #stepper .done button { color: var(--ink-soft); }
+  #stepper .now button { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+  #stepper .now b { background: var(--ink); color: #fff; border-color: var(--ink); }
+  #reset { font-size: 12px; padding: 4px 10px; }
+
+  .b-sec { padding: 36px 0 8px; }
+  .b-sec h2 small { font-size: 13px; }
+  .tb-label { font-size: 12px; color: var(--ink-faint); letter-spacing: .08em; margin-right: 8px; }
+
+  /* 이전 · 다음 */
+  .b-nav { position: sticky; bottom: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; margin-top: 28px; background: rgba(244,245,245,.96); backdrop-filter: blur(6px); border-top: 1px solid var(--line); }
+  .b-count { font-size: 13px; color: var(--ink-soft); text-align: center; }
+  .b-count b { color: var(--ink); font-size: 16px; }
+  .b-count .warn { color: var(--accent); }
+
+  /* 1. 목적 */
+  .why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .why small, .ex-grid small { font-size: 11px; letter-spacing: .14em; color: var(--ink-faint); font-weight: 600; }
+  .why h3 { margin: 4px 0 6px; font-size: 17px; }
+  .why p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+  .purposes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .purpose { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 18px 16px 48px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; transition: border-color .15s; }
+  .purpose:hover { border-color: var(--ink-faint); }
+  .purpose.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .purpose input { position: absolute; left: 18px; top: 20px; width: 18px; height: 18px; accent-color: var(--ink); }
+  .purpose b { font-size: 16px; }
+  .purpose span { font-size: 14px; color: var(--ink-soft); }
+  .purpose em { font-style: normal; font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+  /* 2. 구성 */
+  .subnav { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .subnav button { font: inherit; font-size: 13px; padding: 6px 12px; border: 1px solid var(--line); background: var(--paper); border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
+  .subnav .now button { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .base-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .base-grid h3, .daily-mode h3, .tips h3, .ex-grid h3 { margin: 0 0 4px; font-size: 16px; }
+  .base-grid p, .daily-mode p, .ex-grid p { margin: 0 0 12px; font-size: 14px; color: var(--ink-soft); }
+  .base-grid p.hint { margin: 10px 0 0; font-size: 12px; color: var(--ink-faint); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); padding: 2px; }
+  .seg button { font: inherit; font-size: 13px; border: 0; background: none; padding: 6px 14px; border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  .ctl { font: inherit; font-size: 14px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); color: var(--ink); }
+  .num { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink-soft); }
+  .num input { font: inherit; width: 70px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .num.off { opacity: .4; pointer-events: none; }
+  .daily-mode { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 16px; }
+  .daily-mode > div:first-child { flex: 1 1 320px; }
+
+  .items { display: grid; gap: 12px; }
+  .item { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; grid-template-areas: "head designs" "num designs" "link designs"; gap: 6px 20px; align-items: start; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; opacity: .62; transition: opacity .15s, border-color .15s; }
+  .item.on { opacity: 1; border-color: var(--ink-faint); }
+  .item-head { grid-area: head; display: flex; gap: 10px; cursor: pointer; }
+  .item-head input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--ink); flex: none; }
+  .item-head b { font-size: 15px; }
+  .item-head small { font-size: 11px; letter-spacing: .06em; color: var(--ink-faint); }
+  .item-head em { font-style: normal; font-size: 13px; color: var(--ink-soft); }
+  .item .num { grid-area: num; padding-left: 28px; }
+  .item-link { grid-area: link; padding-left: 28px; font-size: 12px; color: var(--ink-faint); }
+  .designs { grid-area: designs; display: flex; flex-wrap: wrap; gap: 10px; }
+  /* 축소 미리보기: 600px 로 그리고 --k 배율로 줄인다 */
+  .mini { position: relative; overflow: hidden; aspect-ratio: var(--ar); box-shadow: 0 0 0 1px var(--line); background: #fff; }
+  .mini > .sheet-frame { position: absolute; top: 0; left: 0; width: 600px; transform: scale(var(--k)); transform-origin: 0 0; }
+  .mini .sheet { box-shadow: none !important; }
+  .dz { font: inherit; width: 96px; display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); cursor: pointer; text-align: left; }
+  .dz.land { width: 192px; }
+  .dz span { font-size: 11px; line-height: 1.35; color: var(--ink-soft); }
+  .dz.sel { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--paper); }
+  .dz.sel span { color: var(--ink); font-weight: 600; }
+  .dz .sheet, .pv .sheet { box-shadow: 0 0 0 1px var(--line); pointer-events: none; }
+  @media (max-width: 720px) {
+    .item { grid-template-columns: 1fr; grid-template-areas: "head" "num" "designs" "link"; }
+  }
+
+  /* 3. 미리보기 */
+  .quick { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-bottom: 8px; }
+  .quick > div { display: flex; align-items: center; }
+  .quick details { flex-basis: 100%; font-size: 14px; }
+  .quick summary { cursor: pointer; color: var(--ink-soft); }
+  .swap { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; margin-top: 12px; }
+  .swap label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+  .swap select { max-width: 160px; font-size: 13px; }
+  .pv-group { margin: 28px 0 12px; font-size: 16px; padding-bottom: 6px; border-bottom: 1px solid var(--ink); }
+  .pv-group small { font-weight: 400; font-size: 13px; color: var(--ink-faint); margin-left: 6px; }
+  .pv-grid { display: grid; grid-template-columns: repeat(auto-fill, 132px); gap: 16px 12px; }
+  .pv { position: relative; margin: 0; cursor: zoom-in; }
+  .pv.land { grid-column: span 2; }
+  .pv-sheet { min-height: 60px; }
+  .pv-sheet[data-lazy] { width: 132px; aspect-ratio: 1 / 1.35; background: var(--paper); border: 1px dashed var(--line); }
+  .pv figcaption { margin-top: 6px; font-size: 12px; color: var(--ink-soft); line-height: 1.35; }
+  .pv figcaption b { color: var(--ink); margin-right: 2px; }
+  .pv figcaption small { display: block; color: var(--ink-faint); }
+  .pv-x { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); cursor: pointer; font-size: 14px; line-height: 1; color: var(--ink-soft); }
+  .pv-x:hover { border-color: var(--ink); color: var(--ink); }
+  .pv.off .pv-sheet { opacity: .25; }
+  .pv.off figcaption { text-decoration: line-through; }
+
+  /* 크게 보기 */
+  #modal { position: fixed; inset: 0; z-index: 20; background: rgba(30,32,33,.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #modal[hidden] { display: none; }
+  .m-box { width: min(560px, 100%, calc((100vh - 120px) / 1.45)); background: var(--bg); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .m-box.land { width: min(860px, 100%); }
+  .m-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
+  .m-head span { color: var(--ink-soft); flex: 1; }
+
+  /* 4. 내보내기 */
+  .ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .ex-grid h3 { margin-top: 4px; }
+  .progress { margin-top: 14px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
+  .progress > div { grid-column: 1 / -1; height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+  .progress span { font-size: 12px; color: var(--ink-soft); }
+  .tips ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-soft); }
+  .tips li + li { margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <a class="crumb" href="index.html">← 처음으로</a><br>
+    <span class="label-bar">JOURNAL BUILDER</span>
+    <h1>나만의 불릿저널 만들기</h1>
+    <p>목적을 고르고, 단계마다 필요한 페이지와 디자인을 정하면 한 권의 저널이 페이지 순서대로 만들어집니다. 완성본은 PDF나 JPG로 내려받아 노트 앱에서 바로 씁니다.</p>
+  </div>
+</header>
+
+<div class="stepper-wrap"><div class="wrap">
+  <ol id="stepper" aria-label="단계"></ol>
+  <button type="button" class="btn" id="reset">처음부터</button>
+</div></div>
+
+<main class="wrap" id="builder"></main>
+<div id="modal" hidden></div>
+
+<footer>하루 불릿저널 템플릿 · 나만의 불릿저널 만들기 · 설정은 이 브라우저에만 저장됩니다</footer>
+
+<script src="assets/sheet.js"></script>
+<script src="assets/catalog.js"></script>
+<!-- 템플릿 (각 템플릿 페이지와 같은 스크립트) -->
+<script src="daily/timebox.js"></script>
+<script src="daily/rapid-log.js"></script>
+<script src="daily/reflection.js"></script>
+<script src="daily/all-in-one.js"></script>
+<script src="daily/half.js"></script>
+<script src="period/monthly-calendar.js"></script>
+<script src="period/monthly-log.js"></script>
+<script src="period/weekly.js"></script>
+<script src="period/future-log.js"></script>
+<script src="period/year.js"></script>
+<script src="tracker/habit.js"></script>
+<script src="tracker/mood.js"></script>
+<script src="tracker/sleep.js"></script>
+<script src="tracker/health.js"></script>
+<script src="tracker/expense.js"></script>
+<script src="collection/goals.js"></script>
+<script src="collection/project.js"></script>
+<script src="collection/brain-dump.js"></script>
+<script src="collection/reading.js"></script>
+<script src="collection/checklist.js"></script>
+<script src="collection/meal.js"></script>
+<script src="review/weekly.js"></script>
+<script src="review/monthly.js"></script>
+<script src="setup/cover.js"></script>
+<script src="setup/key.js"></script>
+<script src="setup/index.js"></script>
+<script src="paper/dot.js"></script>
+<script src="paper/grid.js"></script>
+<script src="paper/lined.js"></script>
+<script src="paper/blank.js"></script>
+<script src="assets/builder.js"></script>
+</body>
+</html>
