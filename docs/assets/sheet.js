@@ -311,7 +311,7 @@
 
     app.innerHTML = `
       <header class="hero"><div class="wrap">
-        <a class="crumb" href="../index.html#catalog">← 템플릿 분류</a><br>
+        <a class="crumb" href="../catalog.html">← 템플릿 분류</a><br>
         <span class="label-bar">${sec.label}</span>
         <h1>${opts.name} <small style="font-size:16px;font-weight:400;color:var(--ink-faint)">${opts.en}</small></h1>
         <p>${opts.summary}</p>

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>템플릿 분류 · 하루 불릿저널</title>
+<link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="assets/common.css">
+<style>
+  .crumb { font-size: 13px; color: var(--ink-soft); text-decoration: none; }
+  .crumb:hover { color: var(--ink); }
+  header.hero .label-bar { margin-top: 18px; }
+  /* 분류 */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .filters button { font: inherit; font-size: 13px; padding: 6px 14px; border: 1px solid var(--line); background: var(--paper); border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
+  .filters button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .category { margin-bottom: 36px; }
+  .category-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px; }
+  .category-head .code { font-size: 12px; font-weight: 700; color: #fff; background: var(--bar); padding: 2px 8px; }
+  .category-head h3 { margin: 0; font-size: 18px; }
+  .category-head p { margin: 0; color: var(--ink-soft); font-size: 14px; flex-basis: 100%; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .card .top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+  .card h4 { margin: 0; font-size: 15px; }
+  .card .en { font-size: 11px; letter-spacing: .08em; color: var(--ink-faint); text-transform: uppercase; }
+  .card p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+  .card ul { margin: 0; padding-left: 16px; font-size: 13px; color: var(--ink-soft); }
+  .card .foot { margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap; padding-top: 6px; border-top: 1px dashed var(--line-soft); }
+  .tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); white-space: nowrap; }
+  .prio { font-size: 11px; font-weight: 700; color: #fff; padding: 1px 7px; border-radius: 3px; white-space: nowrap; }
+  .prio.p1 { background: var(--p1); } .prio.p2 { background: var(--p2); } .prio.p3 { background: var(--p3); }
+  .status { font-size: 11px; color: var(--ink-faint); }
+  .status.done { color: var(--ink); font-weight: 600; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .summary div { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
+  .summary b { display: block; font-size: 24px; }
+  .summary small { color: var(--ink-soft); }
+
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <a class="crumb" href="index.html">← 처음으로</a><br>
+    <span class="label-bar">TEMPLATE CATALOG</span>
+    <h1>템플릿 분류</h1>
+    <p>불릿저널에 필요한 노트를 7개 분류로 정리했습니다. 이름을 누르면 템플릿 페이지가 열리고, 그곳에서 디자인과 비율을 골라 PDF · JPG로 내보낼 수 있습니다.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="주요 페이지">
+  <div class="wrap">
+    <ul>
+      <li><a href="index.html">소개</a></li>
+      <li><a href="catalog.html" aria-current="page">템플릿 분류</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- 템플릿 분류 -->
+  <section id="catalog">
+
+    <div class="summary" id="summary"></div>
+
+    <div class="legend">
+      <span><b class="prio p1">P1</b> 핵심, 먼저 제작</span>
+      <span><b class="prio p2">P2</b> 자주 사용</span>
+      <span><b class="prio p3">P3</b> 선택, 확장</span>
+    </div>
+
+    <div class="filters" id="filters" role="group" aria-label="분류 필터"></div>
+    <div id="categories"></div>
+  </section>
+
+</main>
+
+<footer>하루 불릿저널 템플릿 · 템플릿 분류</footer>
+
+<script src="assets/catalog.js"></script>
+<script>
+const RATIO_COUNT = 4;
+
+function el(tag, attrs = {}, children = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "text") n.textContent = v;
+    else n.setAttribute(k, v);
+  }
+  for (const c of [].concat(children)) if (c) n.append(c);
+  return n;
+}
+
+function renderSummary() {
+  const all = CATALOG.flatMap(c => c.items);
+  const stats = [
+    [CATALOG.length, "분류"],
+    [all.length, "템플릿"],
+    [all.filter(i => i.prio === 1).length, "P1 핵심"],
+    [all.filter(i => i.href).length, "제작됨"],
+    [all.length * RATIO_COUNT, "비율별 총 페이지"]
+  ];
+  document.getElementById("summary").replaceChildren(
+    ...stats.map(([n, label]) => el("div", {}, [el("b", { text: n }), el("small", { text: label })]))
+  );
+}
+
+function renderCard(item) {
+  const title = item.href ? el("a", { href: item.href, text: item.name }) : document.createTextNode(item.name);
+  return el("article", { class: "card" }, [
+    el("div", { class: "top" }, [
+      el("div", {}, [el("h4", {}, title), el("div", { class: "en", text: item.en })]),
+      el("span", { class: `prio p${item.prio}`, text: `P${item.prio}` })
+    ]),
+    el("p", { text: item.desc }),
+    el("ul", {}, item.parts.map(p => el("li", { text: p }))),
+    el("div", { class: "foot" }, [
+      el("span", { class: "tag", text: item.cycle }),
+      el("span", { class: "tag", text: item.id }),
+      item.designs ? el("span", { class: "tag", text: `디자인 ${item.designs}종` }) : null,
+      el("span", { class: item.href ? "status done" : "status", text: item.href ? "제작됨" : "예정" })
+    ])
+  ]);
+}
+
+function renderCategories(filter) {
+  const host = document.getElementById("categories");
+  const list = filter === "ALL" ? CATALOG : CATALOG.filter(c => c.code === filter);
+  host.replaceChildren(...list.map(cat => el("div", { class: "category", id: `cat-${cat.code}` }, [
+    el("div", { class: "category-head" }, [
+      el("span", { class: "code", text: cat.code }),
+      el("h3", { text: `${cat.name} · ${cat.en}` }),
+      el("p", { text: cat.desc })
+    ]),
+    el("div", { class: "cards" }, [...cat.items].sort((a, b) => a.prio - b.prio).map(renderCard))
+  ])));
+}
+
+function renderFilters() {
+  const host = document.getElementById("filters");
+  const options = [["ALL", "전체"], ...CATALOG.map(c => [c.code, `${c.code}. ${c.name}`])];
+  host.replaceChildren(...options.map(([code, label]) => {
+    const b = el("button", { type: "button", "aria-pressed": code === "ALL" ? "true" : "false", text: label });
+    b.addEventListener("click", () => {
+      host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+      renderCategories(code);
+    });
+    return b;
+  }));
+}
+
+renderSummary();
+renderFilters();
+renderCategories("ALL");
+</script>
+</body>
+</html>
